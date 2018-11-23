@@ -9,10 +9,10 @@
 
 using namespace std;
 
-const int MAX_LINE = 65536
+const int MAX_LINE = 65536;
 
-using unsigned int = uint;
-using unsigned long int = ulint;
+using uint = unsigned int;
+using ulint = unsigned long int;
 
 enum MAPPING_P{
     // Cache block mapping policies
@@ -82,8 +82,8 @@ class Cache{
 public:
     Cache();
     ~Cache(){
-        if(LRU_priority){
-            delete(LRU_priority);
+        if(_LRU_priority){
+            delete(_LRU_priority);
         }
     }
 private:
