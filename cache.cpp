@@ -32,7 +32,7 @@ GET_SIZE:{
 }
 GET_LINE_SIZE:{
     #ifdef PROMPT
-    cout<<"Please input the number of the cacheline size(Unit:Byte)")<<endl;
+    cout<<"Please input the number of the cacheline size(Unit:Byte)"<<endl;
     cout<<"\t(for example:1,2,4,8,16,32,64...2^18)"<<endl;
     #endif
     cin>>size;
@@ -117,7 +117,7 @@ GET_REPL:{
 }
 GET_WRITE:{
     #ifdef PROMPT
-    cout<<"Please input write policy:")<<endl;
+    cout<<"Please input write policy:"<<endl;
     cout<<"\t Write through:input 1"<<endl;
     cout<<"\t Write back:input 2"<<endl;
     #endif
