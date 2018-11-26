@@ -14,17 +14,24 @@ const int MAX_LINE = 65536;
 using uint = unsigned int;
 using ulint = unsigned long int;
 
+// This flag is used to control whether to print
+// input guide when reading cache config or not
+//#define PROMPT
+
 enum MAPPING_P{
     // Cache block mapping policies
     direct_mapped,
-    set_associative
+    set_associative,
+    full_associative
 };
 
 enum REPL_P{
     // Cache replacement policies
+    NONE,
     RANDOM,
     FIFO,
-    LRU
+    LRU,
+    LFU
 };
 
 enum WRITE_P{
@@ -34,22 +41,22 @@ enum WRITE_P{
 };
 
 struct CACHE_SET{
-    MAPPING_P _mapping_policy;
-    REPL_P    _replacement_policy;
-    WRITE_P   _write_policy;
-    ulint     _cache_size;
-    ulint     _line_size;
-    ulint     _cache_sets;
-    ulint     _num_line;
-    ulint     _num_sets;
+    MAPPING_P mapping_policy;
+    REPL_P    replacement_policy;
+    WRITE_P   write_policy;
+    ulint     cache_size;          // cache size
+    ulint     line_size;           // cache line size
+    ulint     cache_sets;          // cache set
+    ulint     num_line;            // # of lines
+    ulint     num_sets;            // # of sets
     CACHE_SET(){
-        _mapping_policy     = direct_mapped;
-        _replacement_policy = RANDOM;
-        _write_policy       = write_back;
-        _cache_size         = 256;
-        _line_size          = 64;    //Bytes
-        _num_line           = 16;
-        _num_sets           = 0;
+        mapping_policy     = set_associative;
+        replacement_policy = RANDOM;
+        write_policy       = write_back;
+        cache_size         = 64;
+        line_size          = 32;    //Bytes
+        num_line           = 0;
+        num_sets           = 0;
     }
 };
 
@@ -81,21 +88,17 @@ struct COUNTER{
 class Cache{
 public:
     Cache();
-    ~Cache(){
-        if(_LRU_priority){
-            delete(_LRU_priority);
-        }
-    }
+    ~Cache();
 private:
     // Functions
-    void _read_config();
+    void read_config();
     
     // Variables
     CACHE_SET   _cache_setting;    // Basic configurations
     COUNTER     _counter;          // Runtime statistics
     bitset<32>  _cache[MAX_LINE];  // Cache status
     // [31]: valid bit [30]: hit [29]: dirty bit [28]~[0]: data
-    uint*       _LRU_priority;     // Priority table for LRU
+    uint        _LRU_priority[MAX_LINE];// Priority table for LRU
     ulint       _current_line;     // The line being processed
     ulint       _current_set;      // The set being processed
     uint        _bit_block;        // # of bits of a block
