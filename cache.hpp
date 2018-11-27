@@ -92,7 +92,7 @@ public:
 private:
     // Functions
     void read_config();
-    
+    void cache_setup();
     // Variables
     CACHE_SET   _cache_setting;    // Basic configurations
     COUNTER     _counter;          // Runtime statistics
