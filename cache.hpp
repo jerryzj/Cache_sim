@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <bitset>
+#include <cassert>
 
 using namespace std;
 

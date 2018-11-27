@@ -57,8 +57,10 @@ void Cache::read_config(){
                 break;
             case 2:
                 _cache_setting.mapping_policy = set_associative;
+                break;
             case 3:
                 _cache_setting.mapping_policy = full_associative;
+                break;
             default:
                 goto GET_MAPPING;
         }
@@ -73,6 +75,7 @@ void Cache::read_config(){
             break;
         case set_associative:
             goto GET_SET;
+            break;
         default:
             cerr<<"Wrong Mapping Policy Config"<<endl;
             exit(-1);
