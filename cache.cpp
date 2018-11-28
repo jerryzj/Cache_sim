@@ -196,4 +196,34 @@ void Cache::cache_setup(){
             cout<<"# of bits/block"<<_bit_block<<endl;
             cout<<"# of bits/tag"<<_bit_tag<<endl;
     }
+    for(int i = 0; i < _cache_setting.num_line; ++i){
+        _cache[i][31] = true;
+    }
+}
+
+void Cache::run_test(char* file_path){
+    ifstream in_file;
+    char address[13];
+
+    in_file.open(file_path, ios::in);
+    while(in_file.fail()){
+        cerr<<"Open trace file error"<<endl;
+        exit(-1);
+    }
+    while(!in_file.eof()){
+        in_file.getline(address, 13);
+        bool __attribute__((unused)) is_success;
+        assert(is_success);
+    }
+    cal_hit_rate();
+    in_file.close();
+}
+
+void Cache::cal_hit_rate(){
+    assert(_counter.access != 0);
+    assert(_counter.load   != 0);
+    assert(_counter.store  != 0);
+    _counter.avg_hit_rate   = static_cast<double>(_counter.hit) / _counter.access;
+    _counter.load_hit_rate  = static_cast<double>(_counter.load_hit) / _counter.load;
+    _counter.store_hit_rate = static_cast<double>(_counter.store_hit) / _counter.store; 
 }

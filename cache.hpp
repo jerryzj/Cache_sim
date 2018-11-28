@@ -52,7 +52,7 @@ struct CACHE_SET{
     ulint     num_sets;            // # of sets
     CACHE_SET(){
         mapping_policy     = set_associative;
-        replacement_policy = RANDOM;
+        replacement_policy = NONE;
         write_policy       = write_back;
         cache_size         = 64;
         line_size          = 32;    //Bytes
@@ -92,8 +92,10 @@ public:
     ~Cache();
 private:
     // Functions
-    void read_config();
-    void cache_setup();
+    void read_config();            // Read cache configurations
+    void cache_setup();            // Setup cache
+    void run_test(char* file_path);// Load trace file and run test
+    void cal_hit_rate();           // Caculate hit rate
     // Variables
     CACHE_SET   _cache_setting;    // Basic configurations
     COUNTER     _counter;          // Runtime statistics
