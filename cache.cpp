@@ -212,14 +212,40 @@ void Cache::run_test(char* file_path){
     }
     while(!in_file.eof()){
         in_file.getline(address, 13);
-        bool __attribute__((unused)) is_success;
+        bool __attribute__((unused)) is_success = _cache_handler(address);
         assert(is_success);
     }
-    cal_hit_rate();
+    _cal_hit_rate();
     in_file.close();
 }
 
-void Cache::cal_hit_rate(){
+bool Cache::_cache_handler(char* address){
+    bool is_load  = false;
+    bool is_store = false;
+    bool is_space = false;
+    bool hit      = false;
+    ulint temp = 0;
+
+    switch(address[0]){
+        case 'l':
+            is_load = true;
+            break;
+        case 's':
+            is_store = true;
+            break;
+        case '\0':
+            is_space = true;
+            break;
+        default:
+            cerr<<"Undefined instruction type."<<endl;
+            cerr<<"Error in address: "<<address<<endl;
+            return false;
+    }
+    temp = strtoul(address+2,NULL,16);
+    
+}
+
+void Cache::_cal_hit_rate(){
     assert(_counter.access != 0);
     assert(_counter.load   != 0);
     assert(_counter.store  != 0);

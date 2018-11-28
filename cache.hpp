@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <bitset>
 #include <cassert>
 
@@ -90,12 +91,13 @@ class Cache{
 public:
     Cache();
     ~Cache();
-private:
-    // Functions
     void read_config();            // Read cache configurations
     void cache_setup();            // Setup cache
     void run_test(char* file_path);// Load trace file and run test
-    void cal_hit_rate();           // Caculate hit rate
+private:
+    // Functions
+    bool _cache_handler(char* address);
+    void _cal_hit_rate();          // Caculate hit rate
     // Variables
     CACHE_SET   _cache_setting;    // Basic configurations
     COUNTER     _counter;          // Runtime statistics
