@@ -20,6 +20,10 @@ using ulint = unsigned long int;
 // input guide when reading cache config or not
 //#define PROMPT
 
+// This flag is used to control whether to 
+// dump log file or not
+#define LOG
+
 enum MAPPING_P{
     // Cache block mapping policies
     direct_mapped,
@@ -96,7 +100,13 @@ public:
     void run_test(char* file_path);// Load trace file and run test
 private:
     // Functions
-    bool _cache_handler(char* address);
+    bool _CacheHandler(char* address);
+    bool _IsHit(bitset<32> flag);
+    void _LRUHitHandler();
+    void _LRU_miss_handler();
+
+
+    bool _check_addr_ident(const bitset<32>& cache, const bitset<32>& addr);
     void _cal_hit_rate();          // Caculate hit rate
     // Variables
     CACHE_SET   _cache_setting;    // Basic configurations

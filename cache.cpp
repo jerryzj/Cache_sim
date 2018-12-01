@@ -210,16 +210,31 @@ void Cache::run_test(char* file_path){
         cerr<<"Open trace file error"<<endl;
         exit(-1);
     }
+
+#ifdef LOG
+    int line_processed = 0;
+    ofstream log_file;
+    log_file.open("cache_sim.log",ios::out);
+#endif
     while(!in_file.eof()){
         in_file.getline(address, 13);
-        bool __attribute__((unused)) is_success = _cache_handler(address);
+        // 1201:Maybe add log_file ref to _CacheHandler
+        bool __attribute__((unused)) is_success = _CacheHandler(address);
         assert(is_success);
+#ifdef LOG
+        ++line_processed;
+        log_file<<line_processed;
+        log_file<<"ADDR:"<<address<<endl;
+#endif
     }
     _cal_hit_rate();
     in_file.close();
+#ifdef LOG
+    log_file.close();
+#endif
 }
 
-bool Cache::_cache_handler(char* address){
+bool Cache::_CacheHandler(char* address){
     bool is_load  = false;
     bool is_store = false;
     bool is_space = false;
@@ -242,8 +257,84 @@ bool Cache::_cache_handler(char* address){
             return false;
     }
     temp = strtoul(address+2,NULL,16);
-    
+    bitset<32> flag(temp);
+    hit = _IsHit(flag);
+
+    if(hit && is_load){
+        ++_counter.access;
+        ++_counter.load;
+        ++_counter.load_hit;
+        ++_counter.hit;
+
+        if(_cache_setting.replacement_policy == LRU){
+            _LRUHitHandler();
+        }
+    }
+    else if(hit && is_store){
+        ++_counter.access;
+        ++_counter.store;
+        ++_counter.store_hit;
+        ++_counter.hit;
+
+        // If write back, we need to set dirty bit
+        if(_cache_setting.write_policy == write_back){
+            _cache[_current_line][29] = true;
+        }
+        if(_cache_setting.replacement_policy == LRU){
+            _LRUHitHandler();
+        }
+    }
+    else if((!hit) && is_load){
+        ++_counter.access;
+        ++_counter.load;
+    }
+    else if((!hit) && is_store){
+        ++_counter.access;
+        ++_counter.store;
+        if(_cache_setting.write_policy == write_back){
+            _cache[_current_line][29] = true; // set dirty bit
+        }
+    }
+    else if(is_space){
+        ++_counter.space;
+    }
+    else{
+        cerr<<"Unexpected error in _CacheHandler"<<endl;
+        cerr<<"ADDR: "<<address<<endl;
+        return false;
+    }
+    return true;
 }
+
+bool Cache::_IsHit(bitset<32> flag){
+    bool ret = false;
+    switch(_cache_setting.replacement_policy){
+        case direct_mapped:
+            bitset<32> temp_cache_line;
+            for(int i=_bit_block,j=0; i<(_bit_block+_bit_line);++i,++j){
+                temp_cache_line[i] = flag[j];
+            }
+            _current_line = temp_cache_line.to_ulong();
+            assert(_cache[_current_line][31] ==  true);
+            if(_cache[_current_line][30] == true){
+                ret = _check_addr_ident(_cache[_current_line],flag);
+            }
+        case full_associative:
+        case set_associative:
+    }
+
+    return ret;
+}
+
+bool Cache::_check_addr_ident(const bitset<32>& cache, const bitset<32>& addr){
+    for(int i = 31, j = 28; i>(31ul-_bit_tag); --i, --j){
+        if(addr[i] != cache[j]){
+            return false;
+        }
+    }
+    return true;
+}
+
 
 void Cache::_cal_hit_rate(){
     assert(_counter.access != 0);
