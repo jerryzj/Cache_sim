@@ -345,7 +345,7 @@ bool Cache::_IsHit(bitset<32> flag){
                     ret = _CheckAddrIdent(_cache[j],flag);
                 }
                 if(ret == true){
-                    _current_line = k;
+                    _current_line = j;
                     break;
                 }
             }
