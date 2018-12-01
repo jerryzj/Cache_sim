@@ -51,17 +51,17 @@ struct CACHE_SET{
     REPL_P    replacement_policy;
     WRITE_P   write_policy;
     ulint     cache_size;          // cache size
-    ulint     line_size;           // cache line size
+    ulint     block_size;          // cache block size
     ulint     cache_sets;          // cache set
-    ulint     num_line;            // # of lines
+    ulint     num_block;            // # of lines
     ulint     num_sets;            // # of sets
     CACHE_SET(){
         mapping_policy     = set_associative;
         replacement_policy = NONE;
         write_policy       = write_back;
         cache_size         = 64;
-        line_size          = 32;    //Bytes
-        num_line           = 0;
+        block_size         = 32;    //Bytes
+        num_block           = 0;
         num_sets           = 0;
     }
 };
@@ -100,8 +100,9 @@ public:
     void run_test(char* file_path);// Load trace file and run test
 private:
     // Main handling Functions
-    void _Read(const bitset<32>& addr);
-    void _Write();
+    void _Read(const bitset<32>& addr);    // Read data from memory
+    void _Write();                         // Write data to memory
+    void _Replace(const bitset<32>& addr); // No available block, replace cache block
     bool _CacheHandler(char* address);
     bool _IsHit(bitset<32> flag);
     void _LRUHitHandler();
@@ -109,6 +110,7 @@ private:
 
 
     // Utility functions
+    void  _WriteToBlock(const bitset<32>& addr);
     ulint _GetCacheIndex(const bitset<32>& addr);
     bool _CheckAddrIdent(const bitset<32>& cache, const bitset<32>& addr);
     void _CalHitRate();            // Caculate hit rate

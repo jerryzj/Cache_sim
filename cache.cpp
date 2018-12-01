@@ -40,7 +40,7 @@ void Cache::read_config(){
         while(size<1 || size>= 262144 || (size&(~size+1)) != size){
             goto GET_LINE_SIZE;
         }
-        _cache_setting.line_size = size;
+        _cache_setting.block_size = size;
     }
     GET_MAPPING:{ // Get cache mapping policy
         #ifdef PROMPT
@@ -141,9 +141,9 @@ void Cache::read_config(){
 }
 
 void Cache::cache_setup(){
-    assert(_cache_setting.line_size != 0);
-    _cache_setting.num_line = (_cache_setting.line_size<<10) / _cache_setting.line_size;
-    ulint temp = _cache_setting.line_size;
+    assert(_cache_setting.block_size != 0);
+    _cache_setting.num_block = (_cache_setting.block_size<<10) / _cache_setting.block_size;
+    ulint temp = _cache_setting.block_size;
     while(temp){
         temp>>=1;
         _bit_block++;
@@ -152,7 +152,7 @@ void Cache::cache_setup(){
     // Setup  bit line and bit set
     switch(_cache_setting.mapping_policy){
         case direct_mapped:
-            temp = _cache_setting.num_line;
+            temp = _cache_setting.num_block;
             while(temp){
                 temp>>=1;
                 _bit_line++;
@@ -167,8 +167,8 @@ void Cache::cache_setup(){
         case set_associative:
             _bit_line = 0;
             assert(_cache_setting.cache_sets != 0);
-            assert(_cache_setting.num_line > _cache_setting.cache_sets);
-            _cache_setting.num_sets = _cache_setting.num_line / _cache_setting.cache_sets;
+            assert(_cache_setting.num_block > _cache_setting.cache_sets);
+            _cache_setting.num_sets = _cache_setting.num_block / _cache_setting.cache_sets;
             temp = _cache_setting.num_sets;
             while(temp){
                 temp >>=1;
@@ -183,7 +183,7 @@ void Cache::cache_setup(){
     _bit_tag = 32ul - _bit_block - _bit_line - _bit_set;
     assert(_bit_tag <= 29);
     // Dump Cache information
-    cout<<"Cache line size: "<<_cache_setting.line_size<<"B"<<endl;
+    cout<<"Cache line size: "<<_cache_setting.block_size<<"B"<<endl;
     cout<<"Cache size:      "<<_cache_setting.cache_size<<"KB"<<endl;
     switch(_cache_setting.mapping_policy){
         case set_associative:
@@ -192,11 +192,11 @@ void Cache::cache_setup(){
         case direct_mapped:
             cout<<"# of bits/line: "<<_bit_line<<endl;
         default:
-            cout<<"# of lines: "<<_cache_setting.num_line<<endl;
+            cout<<"# of lines: "<<_cache_setting.num_block<<endl;
             cout<<"# of bits/block"<<_bit_block<<endl;
             cout<<"# of bits/tag"<<_bit_tag<<endl;
     }
-    for(int i = 0; i < _cache_setting.num_line; ++i){
+    for(int i = 0; i < _cache_setting.num_block; ++i){
         _cache[i][31] = true;
     }
 }
@@ -235,7 +235,56 @@ void Cache::run_test(char* file_path){
 }
 
 void Cache::_Read(const bitset<32>& addr){
-    // TBD
+    switch(_cache_setting.mapping_policy){
+        case direct_mapped:
+            if(_cache[_current_line][30] == false){
+                _WriteToBlock(addr);
+            }
+            else{
+                _Replace(addr);
+            }
+        break;
+        case full_associative:
+            bool space = false;
+            // Find available block
+            for(uint i = 0; i < _cache_setting.num_block; ++i){
+                if(_cache[i][30] == false){
+                    space = true;
+                    _current_line = i;
+                    break;
+                }
+            }
+            if(space == true){
+                _WriteToBlock(addr);
+                if(_cache_setting.replacement_policy == LRU){
+                    // need extra LRU hit handler
+                }
+            }
+            else{
+                _Replace(addr);
+            }
+        break;
+        case set_associative:
+            bool space = false;
+            int i = _cache_setting.cache_sets;
+            for(int j = (_current_set * i); i < (_current_set+1) * i;j++){
+                if(_cache[i][30] == false){
+                    space = true;
+                    _current_line = j;
+                    break;
+                }
+            }
+            if(space == true){
+                _WriteToBlock(addr);
+                if(_cache_setting.replacement_policy == LRU){
+                    // need extra LRU hit handler
+                }
+            }
+            else{
+                _Replace(addr);
+            }
+        break;
+    }
 }
 
 void Cache::_Write(){
@@ -254,13 +303,13 @@ bool Cache::_CacheHandler(char* address){
     switch(address[0]){
         case 'l':
             is_load = true;
-            break;
+        break;
         case 's':
             is_store = true;
-            break;
+        break;
         case '\0':
             is_space = true;
-            break;
+        break;
         default:
             cerr<<"Undefined instruction type."<<endl;
             cerr<<"Error in address: "<<address<<endl;
@@ -325,9 +374,9 @@ bool Cache::_IsHit(bitset<32> flag){
             if(_cache[_current_line][30] == true){
                 ret = _CheckAddrIdent(_cache[_current_line],flag);
             }
-            break;
+        break;
         case full_associative:
-            for(ulint i = 0; i < _cache_setting.num_line; ++i){
+            for(ulint i = 0; i < _cache_setting.num_block; ++i){
                 if(_cache[i][30] == true){
                     ret = _CheckAddrIdent(_cache[i],flag);
                 }
@@ -336,7 +385,7 @@ bool Cache::_IsHit(bitset<32> flag){
                     break;
                 }
             }
-            break;
+        break;
         case set_associative:
             _current_set = _GetCacheIndex(flag);
             ulint i = _cache_setting.num_sets;
@@ -349,12 +398,21 @@ bool Cache::_IsHit(bitset<32> flag){
                     break;
                 }
             }
-            break;
+        break;
         default: 
             cerr<<"Undefined Cache Mapping"<<endl;
             exit(-1);
     }
     return ret;
+}
+
+
+void  Cache::_WriteToBlock(const bitset<32>& addr){
+    for(uint i = 31, j = 28; i > (32ul-_bit_tag); --i, --j){
+        _cache[_current_line][j] =  addr[i];
+        assert(j > 0);
+    }
+    _cache[_current_line][30] = true;
 }
 
 ulint Cache::_GetCacheIndex(const bitset<32>& addr){
@@ -366,7 +424,7 @@ ulint Cache::_GetCacheIndex(const bitset<32>& addr){
 }
 
 bool Cache::_CheckAddrIdent(const bitset<32>& cache, const bitset<32>& addr){
-    for(uint i = 31, j = 28; i>(31ul-_bit_tag); --i, --j){
+    for(uint i = 31, j = 28; i > (31ul-_bit_tag); --i, --j){
         if(addr[i] != cache[j]){
             return false;
         }
