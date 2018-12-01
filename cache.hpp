@@ -99,15 +99,19 @@ public:
     void cache_setup();            // Setup cache
     void run_test(char* file_path);// Load trace file and run test
 private:
-    // Functions
+    // Main handling Functions
+    void _Read(const bitset<32>& addr);
+    void _Write();
     bool _CacheHandler(char* address);
     bool _IsHit(bitset<32> flag);
     void _LRUHitHandler();
     void _LRU_miss_handler();
 
 
-    bool _check_addr_ident(const bitset<32>& cache, const bitset<32>& addr);
-    void _cal_hit_rate();          // Caculate hit rate
+    // Utility functions
+    ulint _GetCacheIndex(const bitset<32>& addr);
+    bool _CheckAddrIdent(const bitset<32>& cache, const bitset<32>& addr);
+    void _CalHitRate();            // Caculate hit rate
     // Variables
     CACHE_SET   _cache_setting;    // Basic configurations
     COUNTER     _counter;          // Runtime statistics

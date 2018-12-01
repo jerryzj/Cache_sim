@@ -227,11 +227,21 @@ void Cache::run_test(char* file_path){
         log_file<<"ADDR:"<<address<<endl;
 #endif
     }
-    _cal_hit_rate();
+    _CalHitRate();
     in_file.close();
 #ifdef LOG
     log_file.close();
 #endif
+}
+
+void Cache::_Read(const bitset<32>& addr){
+    // TBD
+}
+
+void Cache::_Write(){
+    // Set dirty bit and hit bit to flase
+    _cache[_current_line][29] = false;
+    _cache[_current_line][30] = false;
 }
 
 bool Cache::_CacheHandler(char* address){
@@ -308,26 +318,55 @@ bool Cache::_CacheHandler(char* address){
 
 bool Cache::_IsHit(bitset<32> flag){
     bool ret = false;
-    switch(_cache_setting.replacement_policy){
+    switch(_cache_setting.mapping_policy){
         case direct_mapped:
-            bitset<32> temp_cache_line;
-            for(int i=_bit_block,j=0; i<(_bit_block+_bit_line);++i,++j){
-                temp_cache_line[i] = flag[j];
-            }
-            _current_line = temp_cache_line.to_ulong();
+            _current_line = _GetCacheIndex(flag);
             assert(_cache[_current_line][31] ==  true);
             if(_cache[_current_line][30] == true){
-                ret = _check_addr_ident(_cache[_current_line],flag);
+                ret = _CheckAddrIdent(_cache[_current_line],flag);
             }
+            break;
         case full_associative:
+            for(ulint i = 0; i < _cache_setting.num_line; ++i){
+                if(_cache[i][30] == true){
+                    ret = _CheckAddrIdent(_cache[i],flag);
+                }
+                if(ret == true){
+                    _current_line = i;
+                    break;
+                }
+            }
+            break;
         case set_associative:
+            _current_set = _GetCacheIndex(flag);
+            ulint i = _cache_setting.num_sets;
+            for(int j = i * _current_set; j < (i+1) * _current_set; ++j){
+                if(_cache[j][30] == true){
+                    ret = _CheckAddrIdent(_cache[j],flag);
+                }
+                if(ret == true){
+                    _current_line = k;
+                    break;
+                }
+            }
+            break;
+        default: 
+            cerr<<"Undefined Cache Mapping"<<endl;
+            exit(-1);
     }
-
     return ret;
 }
 
-bool Cache::_check_addr_ident(const bitset<32>& cache, const bitset<32>& addr){
-    for(int i = 31, j = 28; i>(31ul-_bit_tag); --i, --j){
+ulint Cache::_GetCacheIndex(const bitset<32>& addr){
+    bitset<32> temp_cache_line;
+    for(uint i = _bit_block, j = 0; i < (_bit_block+_bit_line); ++i, ++j){
+        temp_cache_line[i] = addr[j];
+    }
+    return temp_cache_line.to_ulong();
+}
+
+bool Cache::_CheckAddrIdent(const bitset<32>& cache, const bitset<32>& addr){
+    for(uint i = 31, j = 28; i>(31ul-_bit_tag); --i, --j){
         if(addr[i] != cache[j]){
             return false;
         }
@@ -335,8 +374,7 @@ bool Cache::_check_addr_ident(const bitset<32>& cache, const bitset<32>& addr){
     return true;
 }
 
-
-void Cache::_cal_hit_rate(){
+void Cache::_CalHitRate(){
     assert(_counter.access != 0);
     assert(_counter.load   != 0);
     assert(_counter.store  != 0);
