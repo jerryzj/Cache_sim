@@ -53,7 +53,7 @@ struct CACHE_SET{
     ulint     cache_size;          // cache size
     ulint     block_size;          // cache block size
     ulint     cache_sets;          // cache set
-    ulint     num_block;            // # of lines
+    ulint     num_block;           // # of lines
     ulint     num_sets;            // # of sets
     CACHE_SET(){
         mapping_policy     = set_associative;
@@ -61,7 +61,7 @@ struct CACHE_SET{
         write_policy       = write_back;
         cache_size         = 64;
         block_size         = 32;    //Bytes
-        num_block           = 0;
+        num_block          = 0;
         num_sets           = 0;
     }
 };
@@ -110,9 +110,11 @@ private:
 
 
     // Utility functions
-    void  _WriteToBlock(const bitset<32>& addr);
-    ulint _GetCacheIndex(const bitset<32>& addr);
-    bool _CheckAddrIdent(const bitset<32>& cache, const bitset<32>& addr);
+    void  _WriteToBlock(const bitset<32>& addr);        // Write data to cache block
+    ulint _GetCacheIndex(const bitset<32>& addr);       // Get index of block
+    bool _CheckIdent(const bitset<32>& cache, const bitset<32>& addr);
+    // Check whether current data is in cache block 
+    
     void _CalHitRate();            // Caculate hit rate
     // Variables
     CACHE_SET   _cache_setting;    // Basic configurations

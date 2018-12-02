@@ -372,13 +372,13 @@ bool Cache::_IsHit(bitset<32> flag){
             _current_line = _GetCacheIndex(flag);
             assert(_cache[_current_line][31] ==  true);
             if(_cache[_current_line][30] == true){
-                ret = _CheckAddrIdent(_cache[_current_line],flag);
+                ret = _CheckIdent(_cache[_current_line],flag);
             }
         break;
         case full_associative:
             for(ulint i = 0; i < _cache_setting.num_block; ++i){
                 if(_cache[i][30] == true){
-                    ret = _CheckAddrIdent(_cache[i],flag);
+                    ret = _CheckIdent(_cache[i],flag);
                 }
                 if(ret == true){
                     _current_line = i;
@@ -391,7 +391,7 @@ bool Cache::_IsHit(bitset<32> flag){
             ulint i = _cache_setting.num_sets;
             for(int j = i * _current_set; j < (i+1) * _current_set; ++j){
                 if(_cache[j][30] == true){
-                    ret = _CheckAddrIdent(_cache[j],flag);
+                    ret = _CheckIdent(_cache[j],flag);
                 }
                 if(ret == true){
                     _current_line = j;
@@ -423,7 +423,7 @@ ulint Cache::_GetCacheIndex(const bitset<32>& addr){
     return temp_cache_line.to_ulong();
 }
 
-bool Cache::_CheckAddrIdent(const bitset<32>& cache, const bitset<32>& addr){
+bool Cache::_CheckIdent(const bitset<32>& cache, const bitset<32>& addr){
     for(uint i = 31, j = 28; i > (31ul-_bit_tag); --i, --j){
         if(addr[i] != cache[j]){
             return false;
