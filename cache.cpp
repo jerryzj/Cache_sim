@@ -293,6 +293,39 @@ void Cache::_Write(){
     _cache[_current_line][30] = false;
 }
 
+void Cache::_Replace(const bitset<32>& addr){
+    // Find victim block
+    switch(_cache_setting.mapping_policy){
+        case direct_mapped: // nothing to do 
+        break;
+        case full_associative:
+            switch(_cache_setting.replacement_policy){
+                case RANDOM:
+                    _current_line = rand() / (RAND_MAX/_cache_setting.num_block+1);
+                break;
+                case LRU:
+                break;
+            }
+        break;
+        case set_associative:
+            switch(_cache_setting.replacement_policy){
+                case RANDOM:
+                    ulint temp = rand() / (RAND_MAX/_cache_setting.num_block+1);
+                    _current_line = _current_set*_cache_setting.num_sets+temp;
+                break;
+                case LRU:
+                break;
+            }
+        break;
+    }
+    // If the victim block is dirty, write back to RAM
+    if(_cache[_current_line][29] == true){
+        _Write();
+    }
+    // Write new data from RAM to Cache 
+    _WriteToBlock(addr);
+}
+
 bool Cache::_CacheHandler(char* address){
     bool is_load  = false;
     bool is_store = false;
