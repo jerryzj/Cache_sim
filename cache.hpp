@@ -100,18 +100,15 @@ public:
     void run_test(char* file_path);// Load trace file and run test
 private:
     // Main handling Functions
+    bool _CacheHandler(char* address);     // Main Instruction processing
+    bool _IsHit(bitset<32> flag);          // Data is hit/miss
     void _Read(const bitset<32>& addr);    // Read data from memory
     void _Write();                         // Write data to memory
     void _Replace(const bitset<32>& addr); // No available block, replace cache block
-    bool _CacheHandler(char* address);
-    bool _IsHit(bitset<32> flag);
-    void _LRUHitHandler();
-    void _LRU_miss_handler();
-
 
     // Utility functions
-    void  _WriteToBlock(const bitset<32>& addr);        // Write data to cache block
-    ulint _GetCacheIndex(const bitset<32>& addr);       // Get index of block
+    void  _WriteToBlock(const bitset<32>& addr);    // Write data to cache block
+    ulint _GetCacheIndex(const bitset<32>& addr);   // Get index of block
     bool _CheckIdent(const bitset<32>& cache, const bitset<32>& addr);
     // Check whether current data is in cache block 
     
