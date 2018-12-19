@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/jjlab/Documents/Cache_sim/src/cache.cpp
+cache.hpp
+/home/jjlab/Documents/Cache_sim/src/cache.hpp
+
+/home/jjlab/Documents/Cache_sim/src/cache.hpp
+iostream
+-
+fstream
+-
+string
+-
+bitset
+-
+cassert
+-
+
+/home/jjlab/Documents/Cache_sim/src/main.cpp
+cache.hpp
+/home/jjlab/Documents/Cache_sim/src/cache.hpp
+

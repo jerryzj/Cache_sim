@@ -92,7 +92,7 @@ private:
     
     // Main handling Functions
     bool _CacheHandler(char* trace_line);     // Main Instruction processing
-    bool _IsHit(bitset<32> flag);          // Data is hit/miss
+    bool _IsHit(bitset<32> addr);          // Data is hit/miss
     void _Read(const bitset<32>& addr);    // Read data from memory
     void _Drop();                         // Write data to memory
     void _Replace(const bitset<32>& addr); // No available block, replace cache block
@@ -109,7 +109,7 @@ private:
     COUNTER     _counter;          // Runtime statistics
     bitset<32>  _cache[MAX_LINE];  // Cache status
     // [31]: valid bit [30]: hit [29]: dirty bit [28]~[0]: data
-    uint        _LRU_priority[MAX_LINE];// Priority table for LRU
+    //uint        _LRU_priority[MAX_LINE];// Priority table for LRU
     ulint       _current_line;     // The line being processed
     ulint       _current_set;      // The set being processed
     uint        _bit_block;        // # of bits of a block

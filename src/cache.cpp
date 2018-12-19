@@ -103,7 +103,7 @@ void Cache::cache_setup(){
         _bit_block++;
     }
     --_bit_block;
-    // Setup  bit line and bit set
+    // Setup bit line and bit set
     switch(_cache_setting.associativity){
         case direct_mapped:
             temp = _cache_setting.num_block;
@@ -136,9 +136,14 @@ void Cache::cache_setup(){
     }
     _bit_tag = 32ul - _bit_block - _bit_line - _bit_set;
     assert(_bit_tag <= 29);
+    int set_count = 0;
     for(int i = 0; i < _cache_setting.num_block; ++i){
         _cache[i][31] = true;
+        ++set_count;
     }
+    cout<<"Valid bit set = "<<set_count<<endl;
+
+
 }
 
 void Cache::run_sim(char* trace_file){
@@ -313,12 +318,12 @@ bool Cache::_CacheHandler(char* trace_line){
         break;
         default:
             cerr<<"Undefined instruction type."<<endl;
-            cerr<<"Error in address: "<<trace_line<<endl;
+            cerr<<"Error line: "<<trace_line<<endl;
             return false;
     }
-    temp = strtoul(trace_line+2,NULL,16);
-    bitset<32> flag(temp);
-    hit = _IsHit(flag);
+    temp = strtoul(trace_line+2, NULL, 16);
+    bitset<32> addr(temp);
+    hit = _IsHit(addr);
 
     if(hit && is_load){
         ++_counter.access;
@@ -331,7 +336,6 @@ bool Cache::_CacheHandler(char* trace_line){
         ++_counter.store;
         ++_counter.store_hit;
         ++_counter.hit;
-
         // If write back, we need to set dirty bit
         if(_cache_setting.write_policy == write_back){
             _cache[_current_line][29] = true;
@@ -340,10 +344,12 @@ bool Cache::_CacheHandler(char* trace_line){
     else if((!hit) && is_load){
         ++_counter.access;
         ++_counter.load;
+        _Read(addr);
     }
     else if((!hit) && is_store){
         ++_counter.access;
         ++_counter.store;
+        _Read(addr);
         if(_cache_setting.write_policy == write_back){
             _cache[_current_line][29] = true; // set dirty bit
         }
@@ -352,27 +358,27 @@ bool Cache::_CacheHandler(char* trace_line){
         ++_counter.space;
     }
     else{
-        cerr<<"Unexpected error in _CacheHandler"<<endl;
-        cerr<<"ADDR: "<<trace_line<<endl;
+        cerr<<"Unexpected error in _CacheHandler()"<<endl;
+        cerr<<"ERROR line: "<<trace_line<<endl;
         return false;
     }
     return true;
 }
 
-bool Cache::_IsHit(bitset<32> flag){
+bool Cache::_IsHit(bitset<32> addr){
     bool ret = false;
-    switch(_cache_setting.associativity){
+    /* switch(_cache_setting.associativity){
         case direct_mapped:
-            _current_line = _GetCacheIndex(flag);
-            //assert(_cache[_current_line][31] ==  true);
+            _current_line = _GetCacheIndex(addr);
+            assert(_cache[_current_line][31] == true);
             if(_cache[_current_line][30] == true){
-                ret = _CheckIdent(_cache[_current_line],flag);
+                ret = _CheckIdent(_cache[_current_line],addr);
             }
         break;
         case full_associative:
             for(ulint i = 0; i < _cache_setting.num_block; ++i){
                 if(_cache[i][30] == true){
-                    ret = _CheckIdent(_cache[i],flag);
+                    ret = _CheckIdent(_cache[i],addr);
                 }
                 if(ret == true){
                     _current_line = i;
@@ -381,11 +387,11 @@ bool Cache::_IsHit(bitset<32> flag){
             }
         break;
         case set_associative:
-            _current_set = _GetCacheIndex(flag);
+            _current_set = _GetCacheIndex(addr);
             ulint i = _cache_setting.num_sets;
             for(int j = i * _current_set; j < (i+1) * _current_set; ++j){
                 if(_cache[j][30] == true){
-                    ret = _CheckIdent(_cache[j],flag);
+                    ret = _CheckIdent(_cache[j], addr);
                 }
                 if(ret == true){
                     _current_line = j;
@@ -393,10 +399,41 @@ bool Cache::_IsHit(bitset<32> flag){
                 }
             }
         break;
-        /* default: 
-            cerr<<"Undefined Cache Associativity"<<endl;
-            return false; */
+    } */
+
+    if(_cache_setting.associativity == direct_mapped){
+        _current_line = _GetCacheIndex(addr);
+        cout<<"Current line = "<<_current_line<<endl;
+        //assert(_cache[_current_line][31] == true);
+        if(_cache[_current_line][30] == true){
+            ret = _CheckIdent(_cache[_current_line], addr);
+        }
     }
+    else if(_cache_setting.associativity == full_associative){
+        for(ulint i = 0; i < _cache_setting.num_block; ++i){
+            if(_cache[i][30] == true){
+                ret = _CheckIdent(_cache[i], addr);
+            }
+            if(ret == true){
+                _current_line = i;
+                break;
+            }
+        }
+    }
+    else{ // Set associative
+        _current_set = _GetCacheIndex(addr);
+        ulint i = _cache_setting.cache_sets;
+        for(int j = i * _current_set; j < i * (_current_set + 1); ++j){
+            if(_cache[j][30] == true){
+                ret = _CheckIdent(_cache[j], addr);
+            }
+            if(ret == true){
+                _current_line = j;
+                break;
+            }
+        }
+    }
+
     return ret;
 }
 
@@ -411,8 +448,15 @@ void  Cache::_WriteToBlock(const bitset<32>& addr){
 
 ulint Cache::_GetCacheIndex(const bitset<32>& addr){
     bitset<32> temp_cache_line;
-    for(uint i = _bit_block, j = 0; i < (_bit_block+_bit_line); ++i, ++j){
-        temp_cache_line[i] = addr[j];
+    if(_cache_setting.associativity == set_associative){
+        for(uint i = _bit_block, j = 0; i < (_bit_block+_bit_set); ++i, ++j){
+            temp_cache_line[i] = addr[j];
+        }
+    }
+    else{
+        for(uint i = _bit_block, j = 0; i < (_bit_block+_bit_line); ++i, ++j){
+            temp_cache_line[i] = addr[j];
+        }
     }
     return temp_cache_line.to_ulong();
 }
