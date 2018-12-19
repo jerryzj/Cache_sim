@@ -19,6 +19,10 @@ void Cache::read_config(char* config_file){
     ifstream conf;
 
     conf.open(config_file, ios::in);
+    while(conf.fail()){
+        cerr<<"Open config file error"<<endl;
+        exit(-1);
+    }
     GET_SIZE:{ // Get cache size
         ulint size = 0;
         conf>>size;
@@ -270,22 +274,6 @@ void Cache::_Read(const bitset<32>& addr){
             }
         break;
     }
-    /* if(_cache_setting.associativity == direct_mapped){
-        // If current block is available
-        if(_cache[_current_line][30] == false){
-                // Write data to cache block
-                _WriteToBlock(addr);
-        }
-        else{
-            _Replace(addr);
-        }
-    }
-    else if(_cache_setting.associativity == full_associative){
-
-    }
-    else{
-
-    } */
 }
 
 void Cache::_Drop(){
