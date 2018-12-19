@@ -141,7 +141,7 @@ void Cache::cache_setup(){
         _cache[i][31] = true;
         ++set_count;
     }
-    cout<<"Cache size = "<<_cache_setting.cache_size;
+    cout<<"Cache size = "<<_cache_setting.cache_size<<endl;
     cout<<"Block size = "<<_cache_setting.block_size<<endl;
     cout<<"Number of block = "<<_cache_setting.num_block<<endl;
     if(_cache_setting.associativity == set_associative){
@@ -197,6 +197,9 @@ void Cache::dump_result(char* trace_file){
             exit(-1);
     }
     switch(_cache_setting.replacement_policy){
+        case NONE:
+            cout<<"Replacement policy: None"<<endl;
+        break;
         case RANDOM:
             cout<<"Replacement policy: Random"<<endl;
         break;
@@ -267,6 +270,22 @@ void Cache::_Read(const bitset<32>& addr){
             }
         break;
     }
+    /* if(_cache_setting.associativity == direct_mapped){
+        // If current block is available
+        if(_cache[_current_line][30] == false){
+                // Write data to cache block
+                _WriteToBlock(addr);
+        }
+        else{
+            _Replace(addr);
+        }
+    }
+    else if(_cache_setting.associativity == full_associative){
+
+    }
+    else{
+
+    } */
 }
 
 void Cache::_Drop(){
@@ -348,7 +367,7 @@ bool Cache::_CacheHandler(char* trace_line){
         ++_counter.store;
         ++_counter.store_hit;
         ++_counter.hit;
-        // If write back, we need to set dirty bit
+        // If write back, set dirty bit
         if(_cache_setting.write_policy == write_back){
             _cache[_current_line][29] = true;
         }
@@ -382,8 +401,7 @@ bool Cache::_IsHit(bitset<32> addr){
 
     if(_cache_setting.associativity == direct_mapped){
         _current_line = _GetCacheIndex(addr);
-        cout<<"Current line = "<<_current_line<<endl;
-        //assert(_cache[_current_line][31] == true);
+        assert(_cache[_current_line][31] == true);
         if(_cache[_current_line][30] == true){
             ret = _CheckIdent(_cache[_current_line], addr);
         }
@@ -418,7 +436,7 @@ bool Cache::_IsHit(bitset<32> addr){
 
 
 void  Cache::_WriteToBlock(const bitset<32>& addr){
-    for(uint i = 31, j = 28; i > (32ul-_bit_tag); --i, --j){
+    for(uint i = 31, j = 28; i > (31ul-_bit_tag); --i, --j){
         _cache[_current_line][j] =  addr[i];
         assert(j > 0);
     }
@@ -427,14 +445,15 @@ void  Cache::_WriteToBlock(const bitset<32>& addr){
 
 ulint Cache::_GetCacheIndex(const bitset<32>& addr){
     bitset<32> temp_cache_line;
+    temp_cache_line.reset();
     if(_cache_setting.associativity == set_associative){
-        for(uint i = _bit_block, j = 0; i < (_bit_block+_bit_set); ++i, ++j){
-            temp_cache_line[i] = addr[j];
+        for(uint i = (_bit_block), j = 0; i < (_bit_block+_bit_set); ++i, ++j){
+            temp_cache_line[j] = addr[i];
         }
     }
     else{
-        for(uint i = _bit_block, j = 0; i < (_bit_block+_bit_line); ++i, ++j){
-            temp_cache_line[i] = addr[j];
+        for(uint i = (_bit_block), j = 0; i < (_bit_block+_bit_line); ++i, ++j){
+            temp_cache_line[j] = addr[i];
         }
     }
     return temp_cache_line.to_ulong();
@@ -453,7 +472,6 @@ void Cache::_CalHitRate(){
     assert(_counter.access != 0);
     assert(_counter.load   != 0);
     assert(_counter.store  != 0);
-    cout<<"Hit"<<_counter.hit<<endl;
     _counter.avg_hit_rate   = static_cast<double>(_counter.hit) / _counter.access;
     _counter.load_hit_rate  = static_cast<double>(_counter.load_hit) / _counter.load;
     _counter.store_hit_rate = static_cast<double>(_counter.store_hit) / _counter.store; 

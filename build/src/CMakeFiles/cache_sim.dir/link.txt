@@ -1,1 +1,0 @@
-clang++   -m64   -O3  -rdynamic CMakeFiles/cache_sim.dir/cache.cpp.o CMakeFiles/cache_sim.dir/main.cpp.o  -o ../cache_sim 

@@ -1,5 +1,0 @@
-/home/jjlab/Documents/Cache_sim/build/CMakeFiles/rebuild_cache.dir
-/home/jjlab/Documents/Cache_sim/build/CMakeFiles/edit_cache.dir
-/home/jjlab/Documents/Cache_sim/build/src/CMakeFiles/rebuild_cache.dir
-/home/jjlab/Documents/Cache_sim/build/src/CMakeFiles/cache_sim.dir
-/home/jjlab/Documents/Cache_sim/build/src/CMakeFiles/edit_cache.dir
