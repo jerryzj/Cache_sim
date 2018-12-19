@@ -58,7 +58,7 @@ void Cache::read_config(char* config_file){
     }
     switch(_cache_setting.associativity){
         // Note: replacement policy is not applicable 
-        // on a direct mapped cache 
+        //       on a direct mapped cache 
         case direct_mapped:
             _cache_setting.replacement_policy = NONE;
             return;
@@ -191,7 +191,7 @@ void Cache::dump_result(char* trace_file){
             cout<<"Associativity: direct_mapped"<<endl;
         break;
         case set_associative:
-            cout<<"Associativity: "<<_cache_setting.num_sets<< "-way set_associative"<<endl;
+            cout<<"Associativity: "<<_cache_setting.cache_sets<< "-way set_associative"<<endl;
         break;
         case full_associative:
             cout<<"Associativity: fully_associative"<<endl;
@@ -255,11 +255,10 @@ void Cache::_Read(const bitset<32>& addr){
         break;
         case set_associative:
             space = false;
-            int i = _cache_setting.cache_sets;
-            for(int j = (_current_set * i); i < (_current_set+1) * i;j++){
+            for(int i = (_current_set * _cache_setting.cache_sets); i <((_current_set+1)) * _cache_setting.cache_sets; i++){
                 if(_cache[i][30] == false){
                     space = true;
-                    _current_line = j;
+                    _current_line = i;
                     break;
                 }
             }
@@ -294,19 +293,14 @@ void Cache::_Replace(const bitset<32>& addr){
             else if(_cache_setting.replacement_policy == LRU){
                 // Do sth.
             }
-            else{
-                // _current_line remain the same
-            }
         break;
         case set_associative:
             if(_cache_setting.replacement_policy == RANDOM){
-                _current_line = rand() / (RAND_MAX/_cache_setting.num_block+1);
+                int temp = rand() / (RAND_MAX/_cache_setting.cache_sets+1);
+                _current_line = _current_set*_cache_setting.cache_sets+temp;
             }
             else if(_cache_setting.replacement_policy == LRU){
                 // Do sth.
-            }
-            else{
-                // _current_line remain the same
             }
         break;
     }
@@ -407,13 +401,12 @@ bool Cache::_IsHit(bitset<32> addr){
     }
     else{ // Set associative
         _current_set = _GetCacheIndex(addr);
-        ulint i = _cache_setting.cache_sets;
-        for(int j = i * _current_set; j < i * (_current_set + 1); ++j){
-            if(_cache[j][30] == true){
-                ret = _CheckIdent(_cache[j], addr);
+        for(ulint i = _cache_setting.cache_sets * _current_set; i < ((_current_set + 1)* _cache_setting.cache_sets); ++i){
+            if(_cache[i][30] == true){
+                ret = _CheckIdent(_cache[i], addr);
             }
             if(ret == true){
-                _current_line = j;
+                _current_line = i;
                 break;
             }
         }
@@ -435,12 +428,12 @@ ulint Cache::_GetCacheIndex(const bitset<32>& addr){
     bitset<32> temp_cache_line;
     temp_cache_line.reset();
     if(_cache_setting.associativity == set_associative){
-        for(uint i = (_bit_block), j = 0; i < (_bit_block+_bit_set); ++i, ++j){
+        for(ulint i = (_bit_block), j = 0; i < (_bit_block+_bit_set); ++i, ++j){
             temp_cache_line[j] = addr[i];
         }
     }
     else{
-        for(uint i = (_bit_block), j = 0; i < (_bit_block+_bit_line); ++i, ++j){
+        for(ulint i = (_bit_block), j = 0; i < (_bit_block+_bit_line); ++i, ++j){
             temp_cache_line[j] = addr[i];
         }
     }
