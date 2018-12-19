@@ -141,9 +141,21 @@ void Cache::cache_setup(){
         _cache[i][31] = true;
         ++set_count;
     }
-    cout<<"Valid bit set = "<<set_count<<endl;
-
-
+    cout<<"Cache size = "<<_cache_setting.cache_size;
+    cout<<"Block size = "<<_cache_setting.block_size<<endl;
+    cout<<"Number of block = "<<_cache_setting.num_block<<endl;
+    if(_cache_setting.associativity == set_associative){
+        cout<<"Number of sets = "<<_cache_setting.num_sets<<endl;
+        cout<<"Number of blocks per set = "<<_cache_setting.cache_sets<<endl;
+    }
+    cout<<"Bit block = "<<_bit_block<<endl;
+    if(_cache_setting.associativity == direct_mapped){
+        cout<<"Bit line = "<<_bit_line<<endl;
+    }
+    if(_cache_setting.associativity == set_associative){
+        cout<<"Bit set = "<<_bit_set<<endl;        
+    }
+    cout<<"Bit tag = "<<_bit_tag<<endl;
 }
 
 void Cache::run_sim(char* trace_file){
@@ -367,39 +379,6 @@ bool Cache::_CacheHandler(char* trace_line){
 
 bool Cache::_IsHit(bitset<32> addr){
     bool ret = false;
-    /* switch(_cache_setting.associativity){
-        case direct_mapped:
-            _current_line = _GetCacheIndex(addr);
-            assert(_cache[_current_line][31] == true);
-            if(_cache[_current_line][30] == true){
-                ret = _CheckIdent(_cache[_current_line],addr);
-            }
-        break;
-        case full_associative:
-            for(ulint i = 0; i < _cache_setting.num_block; ++i){
-                if(_cache[i][30] == true){
-                    ret = _CheckIdent(_cache[i],addr);
-                }
-                if(ret == true){
-                    _current_line = i;
-                    break;
-                }
-            }
-        break;
-        case set_associative:
-            _current_set = _GetCacheIndex(addr);
-            ulint i = _cache_setting.num_sets;
-            for(int j = i * _current_set; j < (i+1) * _current_set; ++j){
-                if(_cache[j][30] == true){
-                    ret = _CheckIdent(_cache[j], addr);
-                }
-                if(ret == true){
-                    _current_line = j;
-                    break;
-                }
-            }
-        break;
-    } */
 
     if(_cache_setting.associativity == direct_mapped){
         _current_line = _GetCacheIndex(addr);
