@@ -5,10 +5,6 @@ Cache::Cache(){
     for(auto i : _cache){
         i.reset();
     }
-    // reset LRU priority queue
-    for(auto i : _LRU_priority){
-        i = 0;
-    }
     _bit_block    = 0;
     _bit_line     = 0;
     _bit_set      = 0;
@@ -17,12 +13,8 @@ Cache::Cache(){
     _current_set  = 0;
 }
 
-void Cache::read_config(){
+void Cache::read_config(char* config_file){
     GET_SIZE:{ // Get cache size
-        #ifdef PROMPT
-        cout<<"Please input the number of the cache size(Unit:KB)"<<endl;
-        cout<<"\t(for example:1,2,4,8,16,32,64...2^18)"<<endl;
-        #endif
         ulint size = 0;
         cin>>size;
         while(size<1 || size>= 262144 || (size&(~size+1)) != size){
@@ -31,10 +23,6 @@ void Cache::read_config(){
         _cache_setting.cache_size = size;
     }
     GET_LINE_SIZE:{ // Get cache line size
-        #ifdef PROMPT
-        cout<<"Please input the number of the cacheline size(Unit:Byte)"<<endl;
-        cout<<"\t(for example:1,2,4,8,16,32,64...2^18)"<<endl;
-        #endif
         ulint size = 0;
         cin>>size;
         while(size<1 || size>= 262144 || (size&(~size+1)) != size){
@@ -43,32 +31,26 @@ void Cache::read_config(){
         _cache_setting.block_size = size;
     }
     GET_MAPPING:{ // Get cache mapping policy
-        #ifdef PROMPT
-        cout<<"Please input the method of assoiativity between main memory and cache:"<<endl;
-        cout<<"\t directive_mapped: 1"<<endl;
-        cout<<"\t set_associative : 2"<<endl;
-        cout<<"\t full_associative: 3"<<endl;
-        #endif
         int mapping = -1;
         cin>>mapping;
         switch(mapping){
             case 1:
-                _cache_setting.mapping_policy = direct_mapped;
+                _cache_setting.associativity = direct_mapped;
                 break;
             case 2:
-                _cache_setting.mapping_policy = set_associative;
+                _cache_setting.associativity = set_associative;
                 break;
             case 3:
-                _cache_setting.mapping_policy = full_associative;
+                _cache_setting.associativity = full_associative;
                 break;
             default:
                 goto GET_MAPPING;
         }
     }
-    switch(_cache_setting.mapping_policy){
+    switch(_cache_setting.associativity){
         case direct_mapped:
             _cache_setting.replacement_policy = NONE;
-            goto GET_WRITE;
+            return;
             break;
         case full_associative:
             goto GET_REPL;
@@ -81,10 +63,6 @@ void Cache::read_config(){
             exit(-1);
     }
     GET_SET:{
-        #ifdef PROMPT
-        cout<<"Input the how many lines in each set:"<<endl;
-        cout<<"\t(for example:1,2,4,8,16,32,64...2^18)"<<endl;
-        #endif
         ulint size = 0;
         cin>>size;
         while(size<1 || size>= 262144 || (size&(~size+1))!=size){
@@ -93,49 +71,17 @@ void Cache::read_config(){
         _cache_setting.cache_sets = size;
     }
     GET_REPL:{
-        #ifdef PROMPT
-        cout<<"Please input the replacement policy:"<<endl;
-        cout<<"\t FIFO(First In First Out):input 1"<<endl;
-        cout<<"\t LRU(Least Recently Used):input 2"<<endl;
-        cout<<"\t LFU(Least Frequently Used):input 3"<<endl;
-        cout<<"\t Random:input 4"<<endl;
-        #endif
         int repl = 0;
         cin>>repl;
         switch(repl){
             case 1: 
-                _cache_setting.replacement_policy = FIFO;
+                _cache_setting.replacement_policy = RANDOM;
                 break;
             case 2: 
                 _cache_setting.replacement_policy = LRU;
                 break;
-            case 3:
-                _cache_setting.replacement_policy = LFU;
-                break;
-            case 4:
-                _cache_setting.replacement_policy = RANDOM;
-                break;
             default:
                 goto GET_REPL;
-        }
-    }
-    GET_WRITE:{
-        #ifdef PROMPT
-        cout<<"Please input write policy:"<<endl;
-        cout<<"\t Write through:input 1"<<endl;
-        cout<<"\t Write back:input 2"<<endl;
-        #endif
-        int write = -1;
-        cin>>write;
-        switch(write){
-            case 1: 
-                _cache_setting.write_policy = write_through;
-                break;
-            case 2:
-                _cache_setting.write_policy = write_back;
-                break;
-            default:
-                goto GET_WRITE;
         }
     }
 }
@@ -150,7 +96,7 @@ void Cache::cache_setup(){
     }
     --_bit_block;
     // Setup  bit line and bit set
-    switch(_cache_setting.mapping_policy){
+    switch(_cache_setting.associativity){
         case direct_mapped:
             temp = _cache_setting.num_block;
             while(temp){
@@ -185,7 +131,7 @@ void Cache::cache_setup(){
     // Dump Cache information
     cout<<"Cache line size: "<<_cache_setting.block_size<<"B"<<endl;
     cout<<"Cache size:      "<<_cache_setting.cache_size<<"KB"<<endl;
-    switch(_cache_setting.mapping_policy){
+    switch(_cache_setting.associativity){
         case set_associative:
             cout<<"Cache_set: "<<_cache_setting.cache_sets<<" lines in each set"<<endl;
             cout<<"# of sets: "<<_cache_setting.num_sets<<endl;
@@ -201,41 +147,65 @@ void Cache::cache_setup(){
     }
 }
 
-void Cache::run_test(char* file_path){
+void Cache::run_sim(char* trace_file){
     ifstream in_file;
     char address[13];
 
-    in_file.open(file_path, ios::in);
+    in_file.open(trace_file, ios::in);
     while(in_file.fail()){
         cerr<<"Open trace file error"<<endl;
         exit(-1);
     }
 
-#ifdef LOG
-    int line_processed = 0;
-    ofstream log_file;
-    log_file.open("cache_sim.log",ios::out);
-#endif
     while(!in_file.eof()){
         in_file.getline(address, 13);
-        // 1201:Maybe add log_file ref to _CacheHandler
         bool __attribute__((unused)) is_success = _CacheHandler(address);
         assert(is_success);
-#ifdef LOG
-        ++line_processed;
-        log_file<<line_processed;
-        log_file<<"ADDR:"<<address<<endl;
-#endif
     }
     _CalHitRate();
     in_file.close();
-#ifdef LOG
-    log_file.close();
-#endif
 }
 
+void Cache::dump_result(char* trace_file){
+
+    cout<<"Test file: "<<trace_file<<endl;
+    cout<<"Cache size: "<<_cache_setting.cache_size<<"KB"<<endl;
+    cout<<"Cache block size: "<<_cache_setting.block_size<<"B"<<endl;
+    switch(_cache_setting.associativity){
+        case direct_mapped:
+            cout<<"Associativity: direct_mapped"<<endl;
+        break;
+        case set_associative:
+            cout<<"Associativity: set_associative"<<endl;
+        break;
+        case full_associative:
+            cout<<"Associativity: fully_associative"<<endl;
+        break;
+        default:
+            cerr<<"Error associtivity setting"<<endl;
+            exit(-1);
+    }
+    switch(_cache_setting.replacement_policy){
+        case RANDOM:
+            cout<<"Replacement policy: Random"<<endl;
+        break;
+        case LRU:
+            cout<<"Replacement policy: LRU"<<endl;
+        break;
+        default:
+            cerr<<"Error replacement setting"<<endl;
+            exit(-1);
+    }
+    cout<<"\n";
+    cout<<"Number of cache access： "<<_counter.access<<endl;
+    cout<<"Number of cache load： "  <<_counter.load<<endl;
+    cout<<"Number of cache store： " <<_counter.store<<endl;
+    cout<<"Cache hit rate: "         <<_counter.avg_hit_rate<<endl;
+}
+
+
 void Cache::_Read(const bitset<32>& addr){
-    switch(_cache_setting.mapping_policy){
+    switch(_cache_setting.associativity){
         case direct_mapped:
             if(_cache[_current_line][30] == false){
                 _WriteToBlock(addr);
@@ -287,7 +257,7 @@ void Cache::_Read(const bitset<32>& addr){
     }
 }
 
-void Cache::_Write(){
+void Cache::_Drop(){
     // Set dirty bit and hit bit to flase
     _cache[_current_line][29] = false;
     _cache[_current_line][30] = false;
@@ -295,7 +265,7 @@ void Cache::_Write(){
 
 void Cache::_Replace(const bitset<32>& addr){
     // Find victim block
-    switch(_cache_setting.mapping_policy){
+    switch(_cache_setting.associativity){
         case direct_mapped: // nothing to do 
         break;
         case full_associative:
@@ -320,20 +290,20 @@ void Cache::_Replace(const bitset<32>& addr){
     }
     // If the victim block is dirty, write back to RAM
     if(_cache[_current_line][29] == true){
-        _Write();
+        _Drop();
     }
     // Write new data from RAM to Cache 
     _WriteToBlock(addr);
 }
 
-bool Cache::_CacheHandler(char* address){
+bool Cache::_CacheHandler(char* trace_line){
     bool is_load  = false;
     bool is_store = false;
     bool is_space = false;
     bool hit      = false;
     ulint temp = 0;
 
-    switch(address[0]){
+    switch(trace_line[0]){
         case 'l':
             is_load = true;
         break;
@@ -345,10 +315,10 @@ bool Cache::_CacheHandler(char* address){
         break;
         default:
             cerr<<"Undefined instruction type."<<endl;
-            cerr<<"Error in address: "<<address<<endl;
+            cerr<<"Error in address: "<<trace_line<<endl;
             return false;
     }
-    temp = strtoul(address+2,NULL,16);
+    temp = strtoul(trace_line+2,NULL,16);
     bitset<32> flag(temp);
     hit = _IsHit(flag);
 
@@ -357,10 +327,6 @@ bool Cache::_CacheHandler(char* address){
         ++_counter.load;
         ++_counter.load_hit;
         ++_counter.hit;
-
-        if(_cache_setting.replacement_policy == LRU){
-            _LRUHitHandler();
-        }
     }
     else if(hit && is_store){
         ++_counter.access;
@@ -371,9 +337,6 @@ bool Cache::_CacheHandler(char* address){
         // If write back, we need to set dirty bit
         if(_cache_setting.write_policy == write_back){
             _cache[_current_line][29] = true;
-        }
-        if(_cache_setting.replacement_policy == LRU){
-            _LRUHitHandler();
         }
     }
     else if((!hit) && is_load){
@@ -392,7 +355,7 @@ bool Cache::_CacheHandler(char* address){
     }
     else{
         cerr<<"Unexpected error in _CacheHandler"<<endl;
-        cerr<<"ADDR: "<<address<<endl;
+        cerr<<"ADDR: "<<trace_line<<endl;
         return false;
     }
     return true;
@@ -400,7 +363,7 @@ bool Cache::_CacheHandler(char* address){
 
 bool Cache::_IsHit(bitset<32> flag){
     bool ret = false;
-    switch(_cache_setting.mapping_policy){
+    switch(_cache_setting.associativity){
         case direct_mapped:
             _current_line = _GetCacheIndex(flag);
             assert(_cache[_current_line][31] ==  true);
@@ -433,7 +396,7 @@ bool Cache::_IsHit(bitset<32> flag){
             }
         break;
         default: 
-            cerr<<"Undefined Cache Mapping"<<endl;
+            cerr<<"Undefined Cache Associativity"<<endl;
             exit(-1);
     }
     return ret;

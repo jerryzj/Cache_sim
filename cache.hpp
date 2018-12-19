@@ -16,14 +16,6 @@ const int MAX_LINE = 65536;
 using uint = unsigned int;
 using ulint = unsigned long int;
 
-// This flag is used to control whether to print
-// input guide when reading cache config or not
-//#define PROMPT
-
-// This flag is used to control whether to 
-// dump log file or not
-#define LOG
-
 enum MAPPING_P{
     // Cache block mapping policies
     direct_mapped,
@@ -35,19 +27,16 @@ enum REPL_P{
     // Cache replacement policies
     NONE,
     RANDOM,
-    FIFO,
-    LRU,
-    LFU
+    LRU
 };
 
 enum WRITE_P{
     // Cache write policies
-    write_through,
     write_back
 };
 
 struct CACHE_SET{
-    MAPPING_P mapping_policy;
+    MAPPING_P associativity;
     REPL_P    replacement_policy;
     WRITE_P   write_policy;
     ulint     cache_size;          // cache size
@@ -56,11 +45,11 @@ struct CACHE_SET{
     ulint     num_block;           // # of lines
     ulint     num_sets;            // # of sets
     CACHE_SET(){
-        mapping_policy     = set_associative;
+        associativity      = direct_mapped;
         replacement_policy = NONE;
         write_policy       = write_back;
-        cache_size         = 64;
-        block_size         = 32;    //Bytes
+        cache_size         = 0;
+        block_size         = 0;
         num_block          = 0;
         num_sets           = 0;
     }
@@ -95,24 +84,26 @@ class Cache{
 public:
     Cache();
     ~Cache();
-    void read_config();            // Read cache configurations
-    void cache_setup();            // Setup cache
-    void run_test(char* file_path);// Load trace file and run test
+    void read_config(char* config_file);// Read cache configurations
+    void run_sim(char* trace_file);     // Load trace file and run simulation
+    void cache_setup();                 // Setup cache
+    void dump_result(char* trace_file);                 // print simulation result
 private:
+    
     // Main handling Functions
-    bool _CacheHandler(char* address);     // Main Instruction processing
+    bool _CacheHandler(char* trace_line);     // Main Instruction processing
     bool _IsHit(bitset<32> flag);          // Data is hit/miss
     void _Read(const bitset<32>& addr);    // Read data from memory
-    void _Write();                         // Write data to memory
+    void _Drop();                         // Write data to memory
     void _Replace(const bitset<32>& addr); // No available block, replace cache block
 
     // Utility functions
     void  _WriteToBlock(const bitset<32>& addr);    // Write data to cache block
     ulint _GetCacheIndex(const bitset<32>& addr);   // Get index of block
     bool _CheckIdent(const bitset<32>& cache, const bitset<32>& addr);
-    // Check whether current data is in cache block 
-    
+    // Check whether current address is in certain cache block 
     void _CalHitRate();            // Caculate hit rate
+
     // Variables
     CACHE_SET   _cache_setting;    // Basic configurations
     COUNTER     _counter;          // Runtime statistics
