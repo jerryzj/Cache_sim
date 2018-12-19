@@ -13,7 +13,7 @@ Cache::Cache(){
     _current_set  = 0;
 }
 
-Cache::~Cache(){}
+Cache::~Cache() = default;
 
 void Cache::read_config(char* config_file){
     ifstream conf;
@@ -99,10 +99,10 @@ void Cache::read_config(char* config_file){
 }
 
 void Cache::cache_setup(){
-    assert(_cache_setting.block_size != 0);
+    assert(_cache_setting.block_size > 0);
     _cache_setting.num_block = (_cache_setting.cache_size<<10) / _cache_setting.block_size;
     ulint temp = _cache_setting.block_size;
-    while(temp){
+    while(temp != 0u){
         temp >>= 1;
         _bit_block++;
     }
@@ -111,7 +111,7 @@ void Cache::cache_setup(){
     switch(_cache_setting.associativity){
         case direct_mapped:
             temp = _cache_setting.num_block;
-            while(temp){
+            while(temp != 0u){
                 temp >>= 1;
                 _bit_line++;
             }
@@ -128,7 +128,7 @@ void Cache::cache_setup(){
             assert(_cache_setting.num_block > _cache_setting.cache_sets);
             _cache_setting.num_sets = _cache_setting.num_block / _cache_setting.cache_sets;
             temp = _cache_setting.num_sets;
-            while(temp){
+            while(temp != 0u){
                 temp >>=1;
                 _bit_set++;
             }
@@ -228,7 +228,7 @@ bool Cache::_CacheHandler(char* trace_line){
             cerr<<"Error line: "<<trace_line<<endl;
             return false;
     }
-    temp = strtoul(trace_line+2, NULL, 16);
+    temp = strtoul(trace_line+2, nullptr, 16);
     bitset<32> addr(temp);
     hit = _IsHit(addr);
 
@@ -278,16 +278,16 @@ bool Cache::_IsHit(bitset<32> addr){
     if(_cache_setting.associativity == direct_mapped){
         _current_line = _GetCacheIndex(addr);
         assert(_cache[_current_line][31] == true);
-        if(_cache[_current_line][30] == true){
+        if(_cache[_current_line][30]){
             ret = _CheckIdent(_cache[_current_line], addr);
         }
     }
     else if(_cache_setting.associativity == full_associative){
         for(ulint i = 0; i < _cache_setting.num_block; ++i){
-            if(_cache[i][30] == true){
+            if(_cache[i][30]){
                 ret = _CheckIdent(_cache[i], addr);
             }
-            if(ret == true){
+            if(ret){
                 _current_line = i;
                 break;
             }
@@ -296,10 +296,10 @@ bool Cache::_IsHit(bitset<32> addr){
     else{ // Set associative
         _current_set = _GetCacheIndex(addr);
         for(ulint i = _cache_setting.cache_sets * _current_set; i < ((_current_set + 1)* _cache_setting.cache_sets); ++i){
-            if(_cache[i][30] == true){
+            if(_cache[i][30]){
                 ret = _CheckIdent(_cache[i], addr);
             }
-            if(ret == true){
+            if(ret){
                 _current_line = i;
                 break;
             }
@@ -313,7 +313,7 @@ void Cache::_Read(const bitset<32>& addr){
     bool space = false;
     switch(_cache_setting.associativity){
         case direct_mapped:
-            if(_cache[_current_line][30] == false){
+            if(!_cache[_current_line][30]){
                 _WriteToBlock(addr);
             }
             else{
@@ -324,13 +324,13 @@ void Cache::_Read(const bitset<32>& addr){
             space = false;
             // Find available block
             for(uint i = 0; i < _cache_setting.num_block; ++i){
-                if(_cache[i][30] == false){
+                if(!_cache[i][30]){
                     space = true;
                     _current_line = i;
                     break;
                 }
             }
-            if(space == true){
+            if(space){
                 _WriteToBlock(addr);
                 if(_cache_setting.replacement_policy == LRU){
                     // need extra LRU hit handler
@@ -343,13 +343,13 @@ void Cache::_Read(const bitset<32>& addr){
         case set_associative:
             space = false;
             for(ulint i = (_current_set * _cache_setting.cache_sets); i <((_current_set+1)) * _cache_setting.cache_sets; i++){
-                if(_cache[i][30] == false){
+                if(!_cache[i][30]){
                     space = true;
                     _current_line = i;
                     break;
                 }
             }
-            if(space == true){
+            if(space){
                 _WriteToBlock(addr);
                 if(_cache_setting.replacement_policy == LRU){
                     // need extra LRU hit handler
@@ -386,7 +386,7 @@ void Cache::_Replace(const bitset<32>& addr){
         break;
     }
     // If the victim block is dirty, write back to RAM
-    if(_cache[_current_line][29] == true){
+    if(_cache[_current_line][29]){
         _Drop();
     }
     // Write new data from RAM to Cache 

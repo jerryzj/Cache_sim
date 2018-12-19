@@ -1,20 +1,18 @@
-#pragma once
-
 #ifndef _CACHE_HPP_
 #define _CACHE_HPP_
 
-#include <iostream>
-#include <fstream>
-#include <string>
 #include <bitset>
 #include <cassert>
+#include <fstream>
+#include <iostream>
+#include <string>
 
 using namespace std;
 
 const int MAX_LINE = 65536;
 
 using uint = unsigned int;
-using ulint = unsigned long int;
+using ulint = uint64_t;
 
 enum MAPPING_P{
     // Cache block mapping policies
@@ -50,6 +48,7 @@ struct CACHE_SET{
         write_policy       = write_back;
         cache_size         = 0;
         block_size         = 0;
+        cache_sets         = 0;
         num_block          = 0;
         num_sets           = 0;
     }
