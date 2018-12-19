@@ -87,22 +87,22 @@ public:
     void read_config(char* config_file);// Read cache configurations
     void run_sim(char* trace_file);     // Load trace file and run simulation
     void cache_setup();                 // Setup cache
-    void dump_result(char* trace_file);                 // print simulation result
+    void dump_result(char* trace_file); // print simulation result
 private:
     
     // Main handling Functions
-    bool _CacheHandler(char* trace_line);     // Main Instruction processing
+    bool _CacheHandler(char* trace_line);  // Main Instruction processing
     bool _IsHit(bitset<32> addr);          // Data is hit/miss
     void _Read(const bitset<32>& addr);    // Read data from memory
-    void _Drop();                         // Write data to memory
+    void _Drop();                          // Write data to memory
     void _Replace(const bitset<32>& addr); // No available block, replace cache block
 
     // Utility functions
-    void  _WriteToBlock(const bitset<32>& addr);    // Write data to cache block
-    ulint _GetCacheIndex(const bitset<32>& addr);   // Get index of block
+    void  _WriteToBlock(const bitset<32>& addr);  // Write data to cache block
+    ulint _GetCacheIndex(const bitset<32>& addr); // Get index of block
     bool  _CheckIdent(const bitset<32>& cache, const bitset<32>& addr);
     // Check whether current address is in certain cache block 
-    void _CalHitRate();            // Caculate hit rate
+    void _CalHitRate();                           // Caculate hit rate
 
     // Variables
     CACHE_SET   _cache_setting;    // Basic configurations

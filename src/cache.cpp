@@ -39,7 +39,7 @@ void Cache::read_config(char* config_file){
         }
         _cache_setting.block_size = size;
     }
-    GET_MAPPING:{ // Get cache mapping policy
+    GET_ASSOC:{ // Get cache mapping policy
         int mapping = -1;
         conf>>mapping;
         switch(mapping){
@@ -53,7 +53,7 @@ void Cache::read_config(char* config_file){
                 _cache_setting.associativity = full_associative;
                 break;
             default:
-                goto GET_MAPPING;
+                goto GET_ASSOC;
         }
     }
     switch(_cache_setting.associativity){
@@ -141,25 +141,10 @@ void Cache::cache_setup(){
     _bit_tag = 32ul - _bit_block - _bit_line - _bit_set;
     assert(_bit_tag <= 29);
     int set_count = 0;
-    for(int i = 0; i < _cache_setting.num_block; ++i){
+    for(ulint i = 0; i < _cache_setting.num_block; ++i){
         _cache[i][31] = true;
         ++set_count;
     }
-    cout<<"Cache size = "<<_cache_setting.cache_size<<endl;
-    cout<<"Block size = "<<_cache_setting.block_size<<endl;
-    cout<<"Number of block = "<<_cache_setting.num_block<<endl;
-    if(_cache_setting.associativity == set_associative){
-        cout<<"Number of sets = "<<_cache_setting.num_sets<<endl;
-        cout<<"Number of blocks per set = "<<_cache_setting.cache_sets<<endl;
-    }
-    cout<<"Bit block = "<<_bit_block<<endl;
-    if(_cache_setting.associativity == direct_mapped){
-        cout<<"Bit line = "<<_bit_line<<endl;
-    }
-    if(_cache_setting.associativity == set_associative){
-        cout<<"Bit set = "<<_bit_set<<endl;        
-    }
-    cout<<"Bit tag = "<<_bit_tag<<endl;
 }
 
 void Cache::run_sim(char* trace_file){
@@ -219,97 +204,6 @@ void Cache::dump_result(char* trace_file){
     cout<<"Number of cache load： "  <<_counter.load<<endl;
     cout<<"Number of cache store： " <<_counter.store<<endl;
     cout<<"Cache hit rate: "         <<_counter.avg_hit_rate<<endl;
-}
-
-
-void Cache::_Read(const bitset<32>& addr){
-    bool space = false;
-    switch(_cache_setting.associativity){
-        case direct_mapped:
-            if(_cache[_current_line][30] == false){
-                _WriteToBlock(addr);
-            }
-            else{
-                _Replace(addr);
-            }
-        break;
-        case full_associative:
-            space = false;
-            // Find available block
-            for(uint i = 0; i < _cache_setting.num_block; ++i){
-                if(_cache[i][30] == false){
-                    space = true;
-                    _current_line = i;
-                    break;
-                }
-            }
-            if(space == true){
-                _WriteToBlock(addr);
-                if(_cache_setting.replacement_policy == LRU){
-                    // need extra LRU hit handler
-                }
-            }
-            else{
-                _Replace(addr);
-            }
-        break;
-        case set_associative:
-            space = false;
-            for(int i = (_current_set * _cache_setting.cache_sets); i <((_current_set+1)) * _cache_setting.cache_sets; i++){
-                if(_cache[i][30] == false){
-                    space = true;
-                    _current_line = i;
-                    break;
-                }
-            }
-            if(space == true){
-                _WriteToBlock(addr);
-                if(_cache_setting.replacement_policy == LRU){
-                    // need extra LRU hit handler
-                }
-            }
-            else{
-                _Replace(addr);
-            }
-        break;
-    }
-}
-
-void Cache::_Drop(){
-    // Set dirty bit and hit bit to flase
-    _cache[_current_line][29] = false;
-    _cache[_current_line][30] = false;
-}
-
-void Cache::_Replace(const bitset<32>& addr){
-    // Find victim block
-    switch(_cache_setting.associativity){
-        case direct_mapped: // nothing to do 
-        break;
-        case full_associative:
-            if(_cache_setting.replacement_policy == RANDOM){
-                _current_line = rand() / (RAND_MAX/_cache_setting.num_block+1);
-            }
-            else if(_cache_setting.replacement_policy == LRU){
-                // Do sth.
-            }
-        break;
-        case set_associative:
-            if(_cache_setting.replacement_policy == RANDOM){
-                int temp = rand() / (RAND_MAX/_cache_setting.cache_sets+1);
-                _current_line = _current_set*_cache_setting.cache_sets+temp;
-            }
-            else if(_cache_setting.replacement_policy == LRU){
-                // Do sth.
-            }
-        break;
-    }
-    // If the victim block is dirty, write back to RAM
-    if(_cache[_current_line][29] == true){
-        _Drop();
-    }
-    // Write new data from RAM to Cache 
-    _WriteToBlock(addr);
 }
 
 bool Cache::_CacheHandler(char* trace_line){
@@ -415,6 +309,95 @@ bool Cache::_IsHit(bitset<32> addr){
     return ret;
 }
 
+void Cache::_Read(const bitset<32>& addr){
+    bool space = false;
+    switch(_cache_setting.associativity){
+        case direct_mapped:
+            if(_cache[_current_line][30] == false){
+                _WriteToBlock(addr);
+            }
+            else{
+                _Replace(addr);
+            }
+        break;
+        case full_associative:
+            space = false;
+            // Find available block
+            for(uint i = 0; i < _cache_setting.num_block; ++i){
+                if(_cache[i][30] == false){
+                    space = true;
+                    _current_line = i;
+                    break;
+                }
+            }
+            if(space == true){
+                _WriteToBlock(addr);
+                if(_cache_setting.replacement_policy == LRU){
+                    // need extra LRU hit handler
+                }
+            }
+            else{
+                _Replace(addr);
+            }
+        break;
+        case set_associative:
+            space = false;
+            for(ulint i = (_current_set * _cache_setting.cache_sets); i <((_current_set+1)) * _cache_setting.cache_sets; i++){
+                if(_cache[i][30] == false){
+                    space = true;
+                    _current_line = i;
+                    break;
+                }
+            }
+            if(space == true){
+                _WriteToBlock(addr);
+                if(_cache_setting.replacement_policy == LRU){
+                    // need extra LRU hit handler
+                }
+            }
+            else{
+                _Replace(addr);
+            }
+        break;
+    }
+}
+
+void Cache::_Replace(const bitset<32>& addr){
+    // Find victim block
+    switch(_cache_setting.associativity){
+        case direct_mapped: // nothing to do 
+        break;
+        case full_associative:
+            if(_cache_setting.replacement_policy == RANDOM){
+                _current_line = rand() / (RAND_MAX/_cache_setting.num_block+1);
+            }
+            else if(_cache_setting.replacement_policy == LRU){
+                // Do sth.
+            }
+        break;
+        case set_associative:
+            if(_cache_setting.replacement_policy == RANDOM){
+                int temp = rand() / (RAND_MAX/_cache_setting.cache_sets+1);
+                _current_line = _current_set*_cache_setting.cache_sets+temp;
+            }
+            else if(_cache_setting.replacement_policy == LRU){
+                // Do sth.
+            }
+        break;
+    }
+    // If the victim block is dirty, write back to RAM
+    if(_cache[_current_line][29] == true){
+        _Drop();
+    }
+    // Write new data from RAM to Cache 
+    _WriteToBlock(addr);
+}
+
+void Cache::_Drop(){
+    // Set dirty bit and hit bit to flase
+    _cache[_current_line][29] = false;
+    _cache[_current_line][30] = false;
+}
 
 void  Cache::_WriteToBlock(const bitset<32>& addr){
     for(uint i = 31, j = 28; i > (31ul-_bit_tag); --i, --j){
