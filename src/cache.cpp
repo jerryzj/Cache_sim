@@ -369,7 +369,10 @@ void Cache::_Replace(const bitset<32>& addr){
         break;
         case full_associative:
             if(_cache_setting.replacement_policy == RANDOM){
-                _current_line = rand() / (RAND_MAX/_cache_setting.num_block+1);
+                std::random_device rd;
+                std::mt19937_64 generator( rd() );
+                std::uniform_int_distribution<int> unif(0, INT32_MAX);
+                _current_line = static_cast<ulint>(unif(generator) / (INT32_MAX / _cache_setting.num_block+1));
             }
             else if(_cache_setting.replacement_policy == LRU){
                 // Do sth.
@@ -377,8 +380,11 @@ void Cache::_Replace(const bitset<32>& addr){
         break;
         case set_associative:
             if(_cache_setting.replacement_policy == RANDOM){
-                int temp = rand() / (RAND_MAX/_cache_setting.cache_sets+1);
-                _current_line = _current_set*_cache_setting.cache_sets+temp;
+                std::random_device rd;
+                std::mt19937_64 generator( rd() );
+                std::uniform_int_distribution<int> unif(0, INT32_MAX);
+                ulint temp = static_cast<ulint>(unif(generator) / (INT32_MAX / _cache_setting.cache_sets+1));
+                _current_line = _current_set * _cache_setting.cache_sets + temp;
             }
             else if(_cache_setting.replacement_policy == LRU){
                 // Do sth.

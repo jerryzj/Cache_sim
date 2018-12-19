@@ -10,7 +10,7 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 ## compiler option setting
 set(CMAKE_BUILD_TYPE "DEBUG")
 
-set(CMAKE_CXX_FLAGS_NONE "${CMAKE_CXX_FLAGS_NONE} -O3 -pedantic -fstack-check -fsanitize=address")
+set(CMAKE_CXX_FLAGS_NONE "${CMAKE_CXX_FLAGS_NONE} -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -pedantic -fstack-check -Wall -fsanitize=address -Werror -Wextra -Wno-unused-variable -Wno-unused-parameter")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
 ## Use C++17 std
