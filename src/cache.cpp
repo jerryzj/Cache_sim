@@ -9,7 +9,7 @@ Cache::Cache(){
     _bit_line     = 0;
     _bit_set      = 0;
     _bit_tag      = 0;
-    _current_line = 0;
+    _current_block = 0;
     _current_set  = 0;
 }
 
@@ -21,41 +21,45 @@ void Cache::read_config(char* config_file){
     conf.open(config_file, ios::in);
     while(conf.fail()){
         cerr<<"Open config file error"<<endl;
-        exit(-1);
+        std::exit(-1);
     }
-    GET_SIZE:{ // Get cache size
-        ulint size = 0;
-        conf>>size;
-        while(size<1 || size>= 262144 || (size&(~size+1)) != size){
-            goto GET_SIZE;
-        }
-        _cache_setting.cache_size = size;
+
+    // Get cache size
+    ulint size = 0;
+    conf>>size;
+    if(size<1 || size>= 262144 || (size&(~size+1)) != size){
+        cerr<<"Invalid Cache Size"<<endl;
+        std::exit(-1);
     }
-    GET_LINE_SIZE:{ // Get cache line size
-        ulint size = 0;
-        conf>>size;
-        while(size<1 || size>= 262144 || (size&(~size+1)) != size){
-            goto GET_LINE_SIZE;
-        }
-        _cache_setting.block_size = size;
+    _cache_setting.cache_size = size;
+    
+    // Get cache line size
+    size = 0;
+    conf>>size;
+    if(size<1 || size>= 262144 || (size&(~size+1)) != size){
+        cerr<<"Invalid Cache Block Size"<<endl;
+        std::exit(-1);
     }
-    GET_ASSOC:{ // Get cache mapping policy
-        int mapping = -1;
-        conf>>mapping;
-        switch(mapping){
-            case 1:
-                _cache_setting.associativity = direct_mapped;
-                break;
-            case 2:
-                _cache_setting.associativity = set_associative;
-                break;
-            case 3:
-                _cache_setting.associativity = full_associative;
-                break;
-            default:
-                goto GET_ASSOC;
-        }
-    }
+    _cache_setting.block_size = size;
+    
+    // Get cache mapping policy
+    int mapping = -1;
+    conf>>mapping;
+    switch(mapping){
+        case 1:
+            _cache_setting.associativity = direct_mapped;
+            break;
+        case 2:
+            _cache_setting.associativity = set_associative;
+            break;
+        case 3:
+            _cache_setting.associativity = full_associative;
+            break;
+        default:
+            cerr<<"Invalid Associativity Config"<<endl;
+            std::exit(-1);
+    } 
+
     switch(_cache_setting.associativity){
         // Note: replacement policy is not applicable 
         //       on a direct mapped cache 
@@ -71,16 +75,19 @@ void Cache::read_config(char* config_file){
             break;
         default:
             cerr<<"Wrong Mapping Policy Config"<<endl;
-            exit(-1);
+            std::exit(-1);
     }
+
     GET_SET:{
         ulint size = 0;
         conf>>size;
-        while(size<1 || size>= 262144 || (size&(~size+1))!=size){
-            goto GET_SET;
+        if(size<1 || size>= 262144 || (size&(~size+1))!=size){
+            cerr<<"Invalid Cache Set Config"<<endl;
+            std::exit(-1);
         }
         _cache_setting.cache_sets = size;
     }
+
     GET_REPL:{
         int repl = 0;
         conf>>repl;
@@ -92,7 +99,8 @@ void Cache::read_config(char* config_file){
                 _cache_setting.replacement_policy = LRU;
                 break;
             default:
-                goto GET_REPL;
+                cerr<<"Invalid Replacement Policy"<<endl;
+                std::exit(-1);
         }
     }
     conf.close();
@@ -245,7 +253,7 @@ bool Cache::_CacheHandler(char* trace_line){
         ++_counter.hit;
         // If write back, set dirty bit
         if(_cache_setting.write_policy == write_back){
-            _cache[_current_line][29] = true;
+            _cache[_current_block][29] = true;
         }
     }
     else if((!hit) && is_load){
@@ -258,7 +266,7 @@ bool Cache::_CacheHandler(char* trace_line){
         ++_counter.store;
         _Read(addr);
         if(_cache_setting.write_policy == write_back){
-            _cache[_current_line][29] = true; // set dirty bit
+            _cache[_current_block][29] = true; // set dirty bit
         }
     }
     else if(is_space){
@@ -276,10 +284,10 @@ bool Cache::_IsHit(bitset<32> addr){
     bool ret = false;
 
     if(_cache_setting.associativity == direct_mapped){
-        _current_line = _GetCacheIndex(addr);
-        assert(_cache[_current_line][31] == true);
-        if(_cache[_current_line][30]){
-            ret = _CheckIdent(_cache[_current_line], addr);
+        _current_block = _GetCacheIndex(addr);
+        assert(_cache[_current_block][31] == true);
+        if(_cache[_current_block][30]){
+            ret = _CheckIdent(_cache[_current_block], addr);
         }
     }
     else if(_cache_setting.associativity == full_associative){
@@ -288,7 +296,7 @@ bool Cache::_IsHit(bitset<32> addr){
                 ret = _CheckIdent(_cache[i], addr);
             }
             if(ret){
-                _current_line = i;
+                _current_block = i;
                 break;
             }
         }
@@ -300,7 +308,7 @@ bool Cache::_IsHit(bitset<32> addr){
                 ret = _CheckIdent(_cache[i], addr);
             }
             if(ret){
-                _current_line = i;
+                _current_block = i;
                 break;
             }
         }
@@ -313,7 +321,7 @@ void Cache::_Read(const bitset<32>& addr){
     bool space = false;
     switch(_cache_setting.associativity){
         case direct_mapped:
-            if(!_cache[_current_line][30]){
+            if(!_cache[_current_block][30]){
                 _WriteToBlock(addr);
             }
             else{
@@ -326,7 +334,7 @@ void Cache::_Read(const bitset<32>& addr){
             for(uint i = 0; i < _cache_setting.num_block; ++i){
                 if(!_cache[i][30]){
                     space = true;
-                    _current_line = i;
+                    _current_block = i;
                     break;
                 }
             }
@@ -345,7 +353,7 @@ void Cache::_Read(const bitset<32>& addr){
             for(ulint i = (_current_set * _cache_setting.cache_sets); i <((_current_set+1)) * _cache_setting.cache_sets; i++){
                 if(!_cache[i][30]){
                     space = true;
-                    _current_line = i;
+                    _current_block = i;
                     break;
                 }
             }
@@ -372,7 +380,7 @@ void Cache::_Replace(const bitset<32>& addr){
                 std::random_device rd;
                 std::mt19937_64 generator( rd() );
                 std::uniform_int_distribution<int> unif(0, INT32_MAX);
-                _current_line = static_cast<ulint>(unif(generator) / (INT32_MAX / _cache_setting.num_block+1));
+                _current_block = static_cast<ulint>(unif(generator) / (INT32_MAX / _cache_setting.num_block+1));
             }
             else if(_cache_setting.replacement_policy == LRU){
                 // Do sth.
@@ -384,7 +392,7 @@ void Cache::_Replace(const bitset<32>& addr){
                 std::mt19937_64 generator( rd() );
                 std::uniform_int_distribution<int> unif(0, INT32_MAX);
                 ulint temp = static_cast<ulint>(unif(generator) / (INT32_MAX / _cache_setting.cache_sets+1));
-                _current_line = _current_set * _cache_setting.cache_sets + temp;
+                _current_block = _current_set * _cache_setting.cache_sets + temp;
             }
             else if(_cache_setting.replacement_policy == LRU){
                 // Do sth.
@@ -392,7 +400,7 @@ void Cache::_Replace(const bitset<32>& addr){
         break;
     }
     // If the victim block is dirty, write back to RAM
-    if(_cache[_current_line][29]){
+    if(_cache[_current_block][29]){
         _Drop();
     }
     // Write new data from RAM to Cache 
@@ -401,16 +409,16 @@ void Cache::_Replace(const bitset<32>& addr){
 
 void Cache::_Drop(){
     // Set dirty bit and hit bit to flase
-    _cache[_current_line][29] = false;
-    _cache[_current_line][30] = false;
+    _cache[_current_block][29] = false;
+    _cache[_current_block][30] = false;
 }
 
 void  Cache::_WriteToBlock(const bitset<32>& addr){
     for(uint i = 31, j = 28; i > (31ul-_bit_tag); --i, --j){
-        _cache[_current_line][j] =  addr[i];
+        _cache[_current_block][j] =  addr[i];
         assert(j > 0);
     }
-    _cache[_current_line][30] = true;
+    _cache[_current_block][30] = true;
 }
 
 ulint Cache::_GetCacheIndex(const bitset<32>& addr){

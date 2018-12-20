@@ -110,7 +110,7 @@ private:
     bitset<32>  _cache[MAX_LINE];  // Cache status
     // [31]: valid bit [30]: hit [29]: dirty bit [28]~[0]: data
     //uint        _LRU_priority[MAX_LINE];// Priority table for LRU
-    ulint       _current_line;     // The line being processed
+    ulint       _current_block;     // The block being processed
     ulint       _current_set;      // The set being processed
     uint        _bit_block;        // # of bits of a block
     uint        _bit_line;         // # of bits of a line
