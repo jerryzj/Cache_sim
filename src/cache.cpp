@@ -19,7 +19,7 @@ void Cache::read_config(char* config_file){
     ifstream conf;
 
     conf.open(config_file, ios::in);
-    while(conf.fail()){
+    if(conf.fail()){
         cerr<<"Open config file error"<<endl;
         std::exit(-1);
     }
@@ -109,7 +109,7 @@ void Cache::read_config(char* config_file){
 void Cache::cache_setup(){
     assert(_cache_setting.block_size > 0);
     _cache_setting.num_block = (_cache_setting.cache_size<<10) / _cache_setting.block_size;
-    ulint temp = _cache_setting.block_size;
+    auto temp = _cache_setting.block_size;
     while(temp != 0u){
         temp >>= 1;
         _bit_block++;
@@ -148,10 +148,8 @@ void Cache::cache_setup(){
     }
     _bit_tag = 32ul - _bit_block - _bit_line - _bit_set;
     assert(_bit_tag <= 29);
-    int set_count = 0;
     for(ulint i = 0; i < _cache_setting.num_block; ++i){
         _cache[i][31] = true;
-        ++set_count;
     }
 }
 
@@ -160,7 +158,7 @@ void Cache::run_sim(char* trace_file){
     char trace_line[13];
 
     in_file.open(trace_file, ios::in);
-    while(in_file.fail()){
+    if(in_file.fail()){
         cerr<<"Open trace file error"<<endl;
         exit(-1);
     }
@@ -219,7 +217,6 @@ bool Cache::_CacheHandler(char* trace_line){
     bool is_store = false;
     bool is_space = false;
     bool hit      = false;
-    ulint temp = 0;
 
     switch(trace_line[0]){
         case 'l':
@@ -236,7 +233,7 @@ bool Cache::_CacheHandler(char* trace_line){
             cerr<<"Error line: "<<trace_line<<endl;
             return false;
     }
-    temp = strtoul(trace_line+2, nullptr, 16);
+    auto temp = strtoul(trace_line+2, nullptr, 16);
     bitset<32> addr(temp);
     hit = _IsHit(addr);
 
