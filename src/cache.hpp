@@ -7,9 +7,8 @@
 #include <iostream>
 #include <random>
 #include <string>
-
+#include <vector>
 using namespace std;
-
 const int MAX_LINE = 65536;
 
 using uint = unsigned int;
@@ -109,8 +108,8 @@ private:
     COUNTER     _counter;          // Runtime statistics
     bitset<32>  _cache[MAX_LINE];  // Cache status
     // [31]: valid bit [30]: hit [29]: dirty bit [28]~[0]: data
-    //uint        _LRU_priority[MAX_LINE];// Priority table for LRU
-    ulint       _current_block;     // The block being processed
+    //vector<uint> _LRU_priority;    // Priority table for LRU
+    ulint       _current_block;    // The block being processed
     ulint       _current_set;      // The set being processed
     uint        _bit_block;        // # of bits of a block
     uint        _bit_line;         // # of bits of a line
