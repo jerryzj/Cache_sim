@@ -338,7 +338,7 @@ void Cache::_Read(const bitset<32>& addr){
             if(space){
                 _WriteToBlock(addr);
                 if(_cache_setting.replacement_policy == LRU){
-                    // need extra LRU hit handler
+                    // need LRU hit handler
                 }
             }
             else{
@@ -357,7 +357,7 @@ void Cache::_Read(const bitset<32>& addr){
             if(space){
                 _WriteToBlock(addr);
                 if(_cache_setting.replacement_policy == LRU){
-                    // need extra LRU hit handler
+                    // need LRU hit handler
                 }
             }
             else{
@@ -370,7 +370,7 @@ void Cache::_Read(const bitset<32>& addr){
 void Cache::_Replace(const bitset<32>& addr){
     // Find victim block
     switch(_cache_setting.associativity){
-        case direct_mapped: // nothing to do 
+        case direct_mapped: // nothing to do, replacement policy is not applicable on direct mapped cache 
         break;
         case full_associative:
             if(_cache_setting.replacement_policy == RANDOM){
