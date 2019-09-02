@@ -3,14 +3,12 @@
 
 #include <bitset>
 #include <cassert>
-#include <iostream>
 #include <random>
+#include <vector>
 #include "config_parser.hpp"
-using namespace std;
-const int MAX_LINE = 65536;
 
+const int MAX_LINE = 65536;
 using uint = unsigned int;
-using ulint = uint64_t;
 
 struct COUNTER{
     ulint access;          // # of cache access
@@ -39,32 +37,31 @@ struct COUNTER{
 
 class Cache{
 public:
-    Cache(char* confg_filename);
+    Cache(char* config_filename);
     ~Cache();
-    void read_config(char* config_file);// Read cache configurations
     void run_sim(char* trace_file);     // Load trace file and run simulation
-    void cache_setup();                 // Setup cache
     void dump_result(char* trace_file); // print simulation result
+
 private:
-    
     // Main handling Functions
-    bool _CacheHandler(char* trace_line);  // Main Instruction processing
-    bool _IsHit(bitset<32> addr);          // Data is hit/miss
-    void _Read(const bitset<32>& addr);    // Read data from memory
-    void _Drop();                          // Write data to memory
-    void _Replace(const bitset<32>& addr); // No available block, replace cache block
+    bool _CacheHandler(char* trace_line);       // Main Instruction processing
+    bool _IsHit(std::bitset<32> addr);          // Data is hit/miss
+    void _Read(const std::bitset<32>& addr);    // Read data from memory
+    void _Drop();                               // Write data to memory
+    void _Replace(const std::bitset<32>& addr); // No available block, replace cache block
 
     // Utility functions
-    void  _WriteToBlock(const bitset<32>& addr);  // Write data to cache block
-    ulint _GetCacheIndex(const bitset<32>& addr); // Get index of block
-    bool  _CheckIdent(const bitset<32>& cache, const bitset<32>& addr);
+    void _Cache_Setup();                               // Setup cache
+    void  _WriteToBlock(const std::bitset<32>& addr);  // Write data to cache block
+    ulint _GetCacheIndex(const std::bitset<32>& addr); // Get index of block
+    bool  _CheckIdent(const std::bitset<32>& cache, const std::bitset<32>& addr);
     // Check whether current address is in certain cache block 
     void _CalHitRate();                           // Caculate hit rate
 
     // Variables
     CACHE_SET   _cache_setting;    // Basic configurations
     COUNTER     _counter;          // Runtime statistics
-    bitset<32>  _cache[MAX_LINE];  // Cache status
+    std::bitset<32>  _cache[MAX_LINE];  // Cache status
     // [31]: valid bit [30]: hit [29]: dirty bit [28]~[0]: data
     //vector<uint> _LRU_priority;    // Priority table for LRU
     ulint       _current_block;    // The block being processed

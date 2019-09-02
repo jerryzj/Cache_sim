@@ -12,10 +12,12 @@ Cache::Cache(char* config_filename){
     _current_block = 0;
     _current_set  = 0;
     _cache_setting = readConfig(config_filename);
+    _Cache_Setup();
 }
 
 Cache::~Cache() = default;
 
+/*
 void Cache::read_config(char* config_file){
     ifstream conf;
 
@@ -106,8 +108,9 @@ void Cache::read_config(char* config_file){
     }
     conf.close();
 }
+*/
 
-void Cache::cache_setup(){
+void Cache::_Cache_Setup(){
     assert(_cache_setting.block_size > 0);
     _cache_setting.num_block = (_cache_setting.cache_size<<10) / _cache_setting.block_size;
     auto temp = _cache_setting.block_size;
@@ -144,7 +147,7 @@ void Cache::cache_setup(){
             --_bit_set;
             break;
         default:
-            cerr<<"Invlid mapping policy"<<endl;
+            std::cerr<<"Invlid mapping policy"<<std::endl;
             exit(-1);
     }
     _bit_tag = 32ul - _bit_block - _bit_line - _bit_set;
@@ -155,12 +158,12 @@ void Cache::cache_setup(){
 }
 
 void Cache::run_sim(char* trace_file){
-    ifstream in_file;
+    std::ifstream in_file;
     char trace_line[13];
 
-    in_file.open(trace_file, ios::in);
+    in_file.open(trace_file, std::ios::in);
     if(in_file.fail()){
-        cerr<<"Open trace file error"<<endl;
+        std::cerr<<"Open trace file error"<<std::endl;
         exit(-1);
     }
 
@@ -175,42 +178,42 @@ void Cache::run_sim(char* trace_file){
 
 void Cache::dump_result(char* trace_file){
 
-    cout<<"Test file: "<<trace_file<<endl;
-    cout<<"Cache size: "<<_cache_setting.cache_size<<"KB"<<endl;
-    cout<<"Cache block size: "<<_cache_setting.block_size<<"B"<<endl;
+    std::cout<<"Test file: "<<trace_file<<std::endl;
+    std::cout<<"Cache size: "<<_cache_setting.cache_size<<"KB"<<std::endl;
+    std::cout<<"Cache block size: "<<_cache_setting.block_size<<"B"<<std::endl;
     switch(_cache_setting.associativity){
         case direct_mapped:
-            cout<<"Associativity: direct_mapped"<<endl;
+            std::cout<<"Associativity: direct_mapped"<<std::endl;
         break;
         case set_associative:
-            cout<<"Associativity: "<<_cache_setting.cache_sets<< "-way set_associative"<<endl;
+            std::cout<<"Associativity: "<<_cache_setting.cache_sets<< "-way set_associative"<<std::endl;
         break;
         case full_associative:
-            cout<<"Associativity: fully_associative"<<endl;
+            std::cout<<"Associativity: fully_associative"<<std::endl;
         break;
         default:
-            cerr<<"Error associtivity setting"<<endl;
+            std::cerr<<"Error associtivity setting"<<std::endl;
             exit(-1);
     }
     switch(_cache_setting.replacement_policy){
         case NONE:
-            cout<<"Replacement policy: None"<<endl;
+            std::cout<<"Replacement policy: None"<<std::endl;
         break;
         case RANDOM:
-            cout<<"Replacement policy: Random"<<endl;
+            std::cout<<"Replacement policy: Random"<<std::endl;
         break;
         case LRU:
-            cout<<"Replacement policy: LRU"<<endl;
+            std::cout<<"Replacement policy: LRU"<<std::endl;
         break;
         default:
-            cerr<<"Error replacement setting"<<endl;
+            std::cerr<<"Error replacement setting"<<std::endl;
             exit(-1);
     }
-    cout<<"\n";
-    cout<<"Number of cache access： "<<_counter.access<<endl;
-    cout<<"Number of cache load： "  <<_counter.load<<endl;
-    cout<<"Number of cache store： " <<_counter.store<<endl;
-    cout<<"Cache hit rate: "         <<_counter.avg_hit_rate<<endl;
+    std::cout<<"\n";
+    std::cout<<"Number of cache access： "<<_counter.access<<std::endl;
+    std::cout<<"Number of cache load： "  <<_counter.load<<std::endl;
+    std::cout<<"Number of cache store： " <<_counter.store<<std::endl;
+    std::cout<<"Cache hit rate: "         <<_counter.avg_hit_rate<<std::endl;
 }
 
 bool Cache::_CacheHandler(char* trace_line){
@@ -230,12 +233,12 @@ bool Cache::_CacheHandler(char* trace_line){
             is_space = true;
         break;
         default:
-            cerr<<"Undefined instruction type."<<endl;
-            cerr<<"Error line: "<<trace_line<<endl;
+            std::cerr<<"Undefined instruction type."<<std::endl;
+            std::cerr<<"Error line: "<<trace_line<<std::endl;
             return false;
     }
     auto temp = strtoul(trace_line+2, nullptr, 16);
-    bitset<32> addr(temp);
+    std::bitset<32> addr(temp);
     hit = _IsHit(addr);
 
     if(hit && is_load){
@@ -271,14 +274,14 @@ bool Cache::_CacheHandler(char* trace_line){
         ++_counter.space;
     }
     else{
-        cerr<<"Unexpected error in _CacheHandler()"<<endl;
-        cerr<<"ERROR line: "<<trace_line<<endl;
+        std::cerr<<"Unexpected error in _CacheHandler()"<<std::endl;
+        std::cerr<<"ERROR line: "<<trace_line<<std::endl;
         return false;
     }
     return true;
 }
 
-bool Cache::_IsHit(bitset<32> addr){
+bool Cache::_IsHit(std::bitset<32> addr){
     bool ret = false;
 
     if(_cache_setting.associativity == direct_mapped){
@@ -315,7 +318,7 @@ bool Cache::_IsHit(bitset<32> addr){
     return ret;
 }
 
-void Cache::_Read(const bitset<32>& addr){
+void Cache::_Read(const std::bitset<32>& addr){
     bool space = false;
     switch(_cache_setting.associativity){
         case direct_mapped:
@@ -368,7 +371,7 @@ void Cache::_Read(const bitset<32>& addr){
     }
 }
 
-void Cache::_Replace(const bitset<32>& addr){
+void Cache::_Replace(const std::bitset<32>& addr){
     // Find victim block
     switch(_cache_setting.associativity){
         case direct_mapped: // nothing to do, replacement policy is not applicable on direct mapped cache 
@@ -411,7 +414,7 @@ void Cache::_Drop(){
     _cache[_current_block][30] = false;
 }
 
-void  Cache::_WriteToBlock(const bitset<32>& addr){
+void  Cache::_WriteToBlock(const std::bitset<32>& addr){
     for(uint i = 31, j = 28; i > (31ul-_bit_tag); --i, --j){
         _cache[_current_block][j] =  addr[i];
         assert(j > 0);
@@ -419,8 +422,8 @@ void  Cache::_WriteToBlock(const bitset<32>& addr){
     _cache[_current_block][30] = true;
 }
 
-ulint Cache::_GetCacheIndex(const bitset<32>& addr){
-    bitset<32> temp_cache_line;
+ulint Cache::_GetCacheIndex(const std::bitset<32>& addr){
+    std::bitset<32> temp_cache_line;
     temp_cache_line.reset();
     if(_cache_setting.associativity == set_associative){
         for(ulint i = (_bit_block), j = 0; i < (_bit_block+_bit_set); ++i, ++j){
@@ -435,7 +438,7 @@ ulint Cache::_GetCacheIndex(const bitset<32>& addr){
     return temp_cache_line.to_ulong();
 }
 
-bool Cache::_CheckIdent(const bitset<32>& cache, const bitset<32>& addr){
+bool Cache::_CheckIdent(const std::bitset<32>& cache, const std::bitset<32>& addr){
     for(uint i = 31, j = 28; i > (31ul-_bit_tag); --i, --j){
         if(addr[i] != cache[j]){
             return false;

@@ -2,7 +2,7 @@
 
 CACHE_SET readConfig(char* config_filename){
     CACHE_SET _cache_conf;
-    std::list<string> config_raw, config_ready;
+    std::list<std::string> config_raw, config_ready;
 
     // Preprocessing config file
     config_raw = readFile(config_filename);
@@ -20,7 +20,6 @@ CACHE_SET readConfig(char* config_filename){
     // WIP: use new API, add assert message
     assert(readParameter(config_ready.front(), _cache_conf.block_size));
     config_ready.pop_front();
-
 
     // Read cache associativity
     switch(stoi(config_ready.front())){
@@ -50,6 +49,7 @@ CACHE_SET readConfig(char* config_filename){
         // Read set size
         // WIP: use new API, add assert message
         assert(readParameter(config_ready.front(), _cache_conf.cache_sets));
+        dumpCACTIConf(_cache_conf);        
         config_ready.pop_front();
     }
     // Read replacement policy
@@ -66,8 +66,9 @@ CACHE_SET readConfig(char* config_filename){
             std::exit(-1);
     }
     config_ready.pop_front();
+
     assert(config_ready.empty());
-    dumpCacheConf(_cache_conf);
+    dumpCACTIConf(_cache_conf);
     return _cache_conf;
 }
 
@@ -89,11 +90,11 @@ bool readParameter(const std::string& conf, ulint& para) {
 }
 
 std::list<std::string> readFile(char* config_filename){
-    ifstream file;
-    string temp;
-    list<string> ans;
+    std::ifstream file;
+    std::string temp;
+    std::list<std::string> ans;
 
-    file.open(config_filename, ios::in);
+    file.open(config_filename, std::ios::in);
     while(getline(file, temp)){
         temp.erase(remove(temp.begin(), temp.end(), '\r'), temp.end());
         ans.push_back(temp);
