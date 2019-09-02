@@ -39,7 +39,7 @@ struct COUNTER{
 
 class Cache{
 public:
-    Cache();
+    Cache(char* confg_filename);
     ~Cache();
     void read_config(char* config_file);// Read cache configurations
     void run_sim(char* trace_file);     // Load trace file and run simulation

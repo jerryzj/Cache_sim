@@ -1,6 +1,6 @@
 #include "cache.hpp"
 
-Cache::Cache(){
+Cache::Cache(char* config_filename){
     // reset cache 
     for(auto i : _cache){
         i.reset();
@@ -11,6 +11,7 @@ Cache::Cache(){
     _bit_tag      = 0;
     _current_block = 0;
     _current_set  = 0;
+    _cache_setting = readConfig(config_filename);
 }
 
 Cache::~Cache() = default;
