@@ -77,7 +77,7 @@ void dumpCacheConf(const CACHE_SET& cache_config){
 }
 
 bool sizeCheck(ulint size) {
-    return (size<1) || (size>=262144) || (size&(~size+1)) != size;
+    return ~((size<1) || (size>=262144) || (size&(~size+1)) != size);
 }
 
 bool readParameter(const std::string& conf, ulint& para) {
