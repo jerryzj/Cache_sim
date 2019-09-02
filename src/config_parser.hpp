@@ -52,12 +52,12 @@ struct CACHE_SET{
     }
 };
 // Handle cache parameter description
-CACHE_SET readConfig(char* config_file);
+CACHE_SET readConfig(char* config_filename);
 
 // Utility functions
 bool sizeCheck (ulint size);
 void dumpCacheConf(const CACHE_SET& cache_config); // Dump CACTI config file and show result via stdout
 bool readParameter(const std::string& conf, ulint& para); // Generalized read config entry
-std::list<std::string> readFile(char* config_file); // Read text file into list of string
+std::list<std::string> readFile(char* config_filename); // Read text file into list of string
 std::list<std::string> removeComments(const std::list<std::string>& source); // Remove C/C++ style comments
 #endif
