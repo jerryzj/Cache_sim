@@ -8,11 +8,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 ## compiler option setting
-set(CMAKE_BUILD_TYPE "NONE")
+set(CMAKE_BUILD_TYPE "RELEASE")
 
-set(CMAKE_CXX_FLAGS_NONE "${CMAKE_CXX_FLAGS_NONE} -Oz")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -pedantic -Wall -fsanitize=undefined,address,safe-stack -Werror -Wextra -Wno-unused-variable -Wno-unused-parameter")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_RELEASE "-Oz")
 ## Use C++17 std
 set(CMAKE_CXX_STANDARD 17)
 ## Use clang instead of gcc
