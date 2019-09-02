@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstdint>
 #include <vector>
+#include <list>
 #include <string>
 #include <fstream>
 #include <cassert>
@@ -57,7 +58,6 @@ CACHE_SET readConfig(char* config_file);
 bool sizeCheck (ulint size);
 void dumpCacheConf(const CACHE_SET& cache_config); // Dump CACTI config file and show result via stdout
 bool readParameter(const std::string& conf, ulint& para); // Generalized read config entry
-std::vector<std::string> readFile(char* config_file); // Read text file into vector of string
-std::vector<std::string> removeComments(const std::vector<std::string>& source); // Remove C/C++ style comments
-template<typename T> void popFront (std::vector<T>& v); // Handmade pop_front for vector
+std::list<std::string> readFile(char* config_file); // Read text file into list of string
+std::list<std::string> removeComments(const std::list<std::string>& source); // Remove C/C++ style comments
 #endif

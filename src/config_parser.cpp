@@ -2,7 +2,7 @@
 
 CACHE_SET readConfig(char* config_file){
     CACHE_SET _cache_conf;
-    std::vector<string> config_raw, config_ready;
+    std::list<string> config_raw, config_ready;
 
     // Preprocessing config file
     config_raw = readFile(config_file);
@@ -12,21 +12,18 @@ CACHE_SET readConfig(char* config_file){
     assert (("Config size should be 3~5 lines", config_ready.size() >= 3 && config_ready.size <=5));
 
     // Read cache size
-    //_cache_conf.cache_size = stoi(config_ready[0]);
-    // TODO: Use the generalized function to read each config entry, 
-    //       add asert message
-    assert(readParameter(config_ready[0], _cache_conf.cache_size));
-    //assert(("Checking Cache size", sizeCheck(_cache_conf.cache_size)));
-    // TODO: Must add pop_front feature after a setting is applied
-    //       Maybe use dequeue instead of vector
-    //pop_front(_cache_conf);
+    // WIP: use new API, add assert message
+    assert(readParameter(config_ready.front(), _cache_conf.cache_size));
+    config_ready.pop_front();
     
     // Read cache line size
-    _cache_conf.block_size = stoi(config_ready[1]);
-    assert(("Checking Cache line size", sizeCheck(_cache_conf.block_size)));
+    // WIP: use new API, add assert message
+    assert(readParameter(config_ready.front(), _cache_conf.block_size));
+    config_ready.pop_front();
+
 
     // Read cache associativity
-    switch(stoi(config_ready[2])){
+    switch(stoi(config_ready.front())){
         case 1:
             _cache_conf.associativity = direct_mapped;
             break;
@@ -40,6 +37,7 @@ CACHE_SET readConfig(char* config_file){
             cerr<<"Invalid Associativity"<<endl;
             std::exit(-1);
     }
+    config_ready.pop_front();
 
     if(_cache_conf.associativity == direct_mapped) {
         // Note that replacement policy is invalid for direct-mapped cache
@@ -50,7 +48,8 @@ CACHE_SET readConfig(char* config_file){
     else if (_cache_conf.associativity == set_associative) {
         // Read set size
         // WIP: use new API, add assert message
-        assert(readParameter(config_ready[0], _cache_conf.cache_sets));
+        assert(readParameter(config_ready.front(), _cache_conf.cache_sets));
+        config_ready.pop_front();
 
     }
     else{
@@ -77,10 +76,10 @@ bool readParameter(const std::string& conf, ulint& para) {
     return false;
 }
 
-std::vector<std::string> readFile(char* config_file){
+std::list<std::string> readFile(char* config_file){
     ifstream file;
     string temp;
-    vector<string> ans;
+    list<string> ans;
 
     file.open(config_file, ios::in);
     while(getline(file, temp)){
@@ -91,8 +90,8 @@ std::vector<std::string> readFile(char* config_file){
     return ans;
 }
 
-std::vector<std::string> removeComments(const std::vector<std::string>& source) {
-    std::vector<std::string> ans;
+std::list<std::string> removeComments(const std::list<std::string>& source) {
+    std::list<std::string> ans;
     bool status = 0; // false:nothing, true:under block comment
     for(std::string line : source){
         if(status == 0 && (ans.empty() || ans.back()!="")) {
@@ -125,12 +124,4 @@ std::vector<std::string> removeComments(const std::vector<std::string>& source) 
         }
     }
     return ans;
-}
-
-template<typename CACHE_SET> void popFront (std::vector<CACHE_SET>& v){
-    if (v.size() > 0) {
-        std::reverse(v.begin(), v.end());
-        v.pop_back();
-        std::reverse(v.begin(), v.end());
-    }
 }
