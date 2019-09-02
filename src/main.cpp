@@ -1,6 +1,6 @@
 #include "cache.hpp"
 
-int main(int argc, char* argv[]){
+int main(int argc, char *argv[]) {
     assert(argc >= 3);
 
     Cache cache(argv[2]);
