@@ -1,9 +1,7 @@
 #!/bin/sh
-rm -rf build
-mkdir build
 cd build
 cmake ..
 make -j
-./cache_sim ../TestData/gcc.trace ../TestData/cache1.cfg
-./cache_sim ../TestData/gcc.trace ../TestData/cache2.cfg
-./cache_sim ../TestData/gcc.trace ../TestData/cache3.cfg
+./cache_sim -t ../TestData/gcc.trace -c ../TestData/cache1.cfg
+./cache_sim -t ../TestData/gcc.trace -c ../TestData/cache2.cfg
+./cache_sim -t ../TestData/gcc.trace -c ../TestData/cache3.cfg
