@@ -2,23 +2,26 @@
 
 Cache Simulator for EE3450 course
 
-* Package requirement
+## Package requirement
 
-    clang, cmake
+* clang
+* cmake
+* clang-format
 
-* Build
+## Build
 
-    ``` shell
-    mkdir build
-    cd build
-    cmake ..
-    make -j
-    ```
+``` shell
+mkdir build
+cd build
+cmake ..
+make -j
+```
 
-The executable will be named as **cache_sim**.
+* Before compiling, it'll automatically format your codes using clang-format.
+* The executable will be named as **cache_sim**.
 
-* Run simulation
+## Run simulation
 
-    ```shell
-    ./cache_sim ../TestData/gcc.trace ../TestData/cache1.cfg
-    ```
+```shell
+./cache_sim  -t ../TestData/gcc.trace -c ../TestData/cache1.cfg
+```
