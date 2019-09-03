@@ -12,12 +12,10 @@ CACHE_SET readConfig(const char *config_filename) {
     assert(config_ready.size() >= 3 && config_ready.size() <= 5);
 
     // Read cache size
-    // WIP: use new API, add assert message
     assert(readParameter(config_ready.front(), _cache_conf.cache_size));
     config_ready.pop_front();
 
     // Read cache line size
-    // WIP: use new API, add assert message
     assert(readParameter(config_ready.front(), _cache_conf.block_size));
     config_ready.pop_front();
 
@@ -42,11 +40,9 @@ CACHE_SET readConfig(const char *config_filename) {
         // Note that replacement policy is invalid for direct-mapped cache
         _cache_conf.replacement_policy = NONE;
         assert(config_ready.empty());
-        dumpCACTIConf(_cache_conf);
         return _cache_conf;
     } else if (_cache_conf.associativity == set_associative) {
         // Read set size
-        // WIP: use new API, add assert message
         assert(readParameter(config_ready.front(), _cache_conf.cache_sets));
         config_ready.pop_front();
     }
@@ -66,11 +62,8 @@ CACHE_SET readConfig(const char *config_filename) {
     config_ready.pop_front();
 
     assert(config_ready.empty());
-    dumpCACTIConf(_cache_conf);
     return _cache_conf;
 }
-
-void dumpCACTIConf(const CACHE_SET &cache_config) {}
 
 bool sizeCheck(ulint size) {
     return ~((size < 1) || (size >= 262144) || (size & (~size + 1)) != size);

@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
     Cache cache(config.c_str());
     cache.run_sim(trace.c_str());
     cache.dump_result(trace.c_str());
+    cache.dump_CACTI_config();
 
     return 0;
 }

@@ -56,7 +56,6 @@ CACHE_SET readConfig(const char *config_filename);
 
 // Utility functions
 bool sizeCheck(ulint size);
-void dumpCACTIConf(const CACHE_SET &cache_config); // Dump CACTI config file
 bool readParameter(const std::string &conf,
                    ulint &para); // Generalized read config entry
 std::list<std::string>

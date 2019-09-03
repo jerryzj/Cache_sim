@@ -40,7 +40,8 @@ class Cache {
     Cache(const char *config_filename);
     ~Cache();
     void run_sim(const char *trace_file); // Load trace file and run simulation
-    void dump_result(const char *trace_file); // print simulation result
+    void dump_result(const char *trace_file); // Print simulation result
+    void dump_CACTI_config(); // Generate CACTI configuration file
 
   private:
     // Main handling Functions
