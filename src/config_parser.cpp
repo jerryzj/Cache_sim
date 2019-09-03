@@ -1,6 +1,6 @@
 #include "config_parser.hpp"
 
-CACHE_SET readConfig(char *config_filename) {
+CACHE_SET readConfig(const char *config_filename) {
     CACHE_SET _cache_conf;
     std::list<std::string> config_raw, config_ready;
 
@@ -84,7 +84,7 @@ bool readParameter(const std::string &conf, ulint &para) {
     return false;
 }
 
-std::list<std::string> readFile(char *config_filename) {
+std::list<std::string> readFile(const char *config_filename) {
     std::ifstream file;
     std::string temp;
     std::list<std::string> ans;
@@ -108,6 +108,9 @@ std::list<std::string> removeComments(const std::list<std::string> &source) {
         int i = 0;
         while (i < static_cast<int>(line.size())) {
             if (line.substr(i, 2) == "//") {
+                if (status == 0)
+                    break; // break  while(i<line.size()){...}   loop
+            } else if (line.substr(i, 1) == "#") {
                 if (status == 0)
                     break; // break  while(i<line.size()){...}   loop
             } else if (line.substr(i, 2) == "/*") {

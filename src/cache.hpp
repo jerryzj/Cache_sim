@@ -37,10 +37,10 @@ struct COUNTER {
 
 class Cache {
   public:
-    Cache(char *config_filename);
+    Cache(const char *config_filename);
     ~Cache();
-    void run_sim(char *trace_file);     // Load trace file and run simulation
-    void dump_result(char *trace_file); // print simulation result
+    void run_sim(const char *trace_file); // Load trace file and run simulation
+    void dump_result(const char *trace_file); // print simulation result
 
   private:
     // Main handling Functions

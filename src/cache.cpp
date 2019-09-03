@@ -1,6 +1,6 @@
 #include "cache.hpp"
 
-Cache::Cache(char *config_filename) {
+Cache::Cache(const char *config_filename) {
     // reset cache
     for (auto i : _cache) {
         i.reset();
@@ -16,99 +16,6 @@ Cache::Cache(char *config_filename) {
 }
 
 Cache::~Cache() = default;
-
-/*
-void Cache::read_config(char* config_file){
-    ifstream conf;
-
-    conf.open(config_file, ios::in);
-    if(conf.fail()){
-        cerr<<"Open config file error"<<endl;
-        std::exit(-1);
-    }
-
-    // Get cache size
-    ulint size = 0;
-    conf>>size;
-    if(size<1 || size>= 262144 || (size&(~size+1)) != size){
-        cerr<<"Invalid Cache Size"<<endl;
-        std::exit(-1);
-    }
-    _cache_setting.cache_size = size;
-
-    // Get cache line size
-    size = 0;
-    conf>>size;
-    if(size<1 || size>= 262144 || (size&(~size+1)) != size){
-        cerr<<"Invalid Cache Block Size"<<endl;
-        std::exit(-1);
-    }
-    _cache_setting.block_size = size;
-
-    // Get cache mapping policy
-    int mapping = -1;
-    conf>>mapping;
-    switch(mapping){
-        case 1:
-            _cache_setting.associativity = direct_mapped;
-            break;
-        case 2:
-            _cache_setting.associativity = set_associative;
-            break;
-        case 3:
-            _cache_setting.associativity = full_associative;
-            break;
-        default:
-            cerr<<"Invalid Associativity Config"<<endl;
-            std::exit(-1);
-    }
-
-    switch(_cache_setting.associativity){
-        // Note: replacement policy is not applicable
-        //       on a direct mapped cache
-        case direct_mapped:
-            _cache_setting.replacement_policy = NONE;
-            return;
-            break;
-        case full_associative:
-            goto GET_REPL;
-            break;
-        case set_associative:
-            goto GET_SET;
-            break;
-        default:
-            cerr<<"Wrong Mapping Policy Config"<<endl;
-            std::exit(-1);
-    }
-
-    GET_SET:{
-        ulint size = 0;
-        conf>>size;
-        if(size<1 || size>= 262144 || (size&(~size+1))!=size){
-            cerr<<"Invalid Cache Set Config"<<endl;
-            std::exit(-1);
-        }
-        _cache_setting.cache_sets = size;
-    }
-
-    GET_REPL:{
-        int repl = 0;
-        conf>>repl;
-        switch(repl){
-            case 1:
-                _cache_setting.replacement_policy = RANDOM;
-                break;
-            case 2:
-                _cache_setting.replacement_policy = LRU;
-                break;
-            default:
-                cerr<<"Invalid Replacement Policy"<<endl;
-                std::exit(-1);
-        }
-    }
-    conf.close();
-}
-*/
 
 void Cache::_Cache_Setup() {
     assert(_cache_setting.block_size > 0);
@@ -159,7 +66,7 @@ void Cache::_Cache_Setup() {
     }
 }
 
-void Cache::run_sim(char *trace_file) {
+void Cache::run_sim(const char *trace_file) {
     std::ifstream in_file;
     char trace_line[13];
 
@@ -178,7 +85,7 @@ void Cache::run_sim(char *trace_file) {
     _CalHitRate();
 }
 
-void Cache::dump_result(char *trace_file) {
+void Cache::dump_result(const char *trace_file) {
 
     std::cout << "===================================" << std::endl;
     std::cout << "Test file: " << trace_file << std::endl;
@@ -220,6 +127,7 @@ void Cache::dump_result(char *trace_file) {
     std::cout << "Number of cache load： " << _counter.load << std::endl;
     std::cout << "Number of cache store： " << _counter.store << std::endl;
     std::cout << "Cache hit rate: " << _counter.avg_hit_rate << std::endl;
+    std::cout << "===================================" << std::endl;
 }
 
 bool Cache::_CacheHandler(char *trace_line) {
