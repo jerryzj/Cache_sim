@@ -11,8 +11,9 @@ int main(int argc, char *argv[]) {
         std::cerr << ex.what() << std::endl;
         return -1;
     }
-    if (parser.is_help())
+    if (parser.is_help()) {
         return 0;
+    }
     std::string config = parser.get<std::string>("c");
     std::string trace = parser.get<std::string>("t");
 

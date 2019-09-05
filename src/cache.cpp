@@ -77,9 +77,17 @@ void Cache::run_sim(const char *trace_file) {
     }
 
     while (!in_file.eof()) {
-        in_file.getline(trace_line, 13);
-        bool __attribute__((unused)) is_success = _CacheHandler(trace_line);
-        assert(is_success);
+        try {
+            in_file.getline(trace_line, 13);
+            bool is_success = _CacheHandler(trace_line);
+            if (!is_success) {
+                throw std::logic_error("Cache Handler failed");
+            }
+        } catch (std::exception &ex) {
+            in_file.close();
+            std::cerr << ex.what() << std::endl;
+            exit(-1);
+        }
     }
     in_file.close();
     _CalHitRate();
@@ -134,7 +142,7 @@ void Cache::dump_CACTI_config() {
     std::ofstream out_file("cacti.cfg");
 
     if (!out_file) {
-        std::cout << "Unable to generate cacti.cfg" << std::endl;
+        std::cerr << "Unable to generate cacti.cfg" << std::endl;
         exit(-1);
     }
     out_file << "# Cache size\n";

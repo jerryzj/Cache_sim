@@ -4,6 +4,7 @@
 #include "config_parser.hpp"
 #include <bitset>
 #include <cassert>
+#include <exception>
 #include <random>
 #include <vector>
 
