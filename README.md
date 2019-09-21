@@ -11,7 +11,6 @@ Cache Simulator for EE3450 course
 ## Build
 
 ``` shell
-mkdir build
 cd build
 cmake ..
 make -j
