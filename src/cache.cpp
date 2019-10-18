@@ -1,16 +1,11 @@
 #include "cache.hpp"
 
-Cache::Cache(const char *config_filename) {
-    // reset cache
+Cache::Cache(const char *config_filename)
+    : _current_block(0), _current_set(0), _bit_block(0), _bit_line(0) {
+
     for (auto i : _cache) {
-        i.reset();
+        i.reset(); // reset cache
     }
-    _bit_block = 0;
-    _bit_line = 0;
-    _bit_set = 0;
-    _bit_tag = 0;
-    _current_block = 0;
-    _current_set = 0;
     _cache_setting = readConfig(config_filename);
     _Cache_Setup();
 }
@@ -47,7 +42,7 @@ void Cache::_Cache_Setup() {
         assert(_cache_setting.cache_sets != 0);
         assert(_cache_setting.num_block > _cache_setting.cache_sets);
         _cache_setting.num_sets =
-            _cache_setting.num_block / _cache_setting.cache_sets;
+            (_cache_setting.num_block / _cache_setting.cache_sets);
         temp = _cache_setting.num_sets;
         while (temp != 0u) {
             temp >>= 1;
@@ -59,7 +54,7 @@ void Cache::_Cache_Setup() {
         std::cerr << "Invlid mapping policy" << std::endl;
         exit(-1);
     }
-    _bit_tag = 32ul - _bit_block - _bit_line - _bit_set;
+    _bit_tag = (32ul - _bit_block - _bit_line - _bit_set);
     assert(_bit_tag <= 29);
     for (ulint i = 0; i < _cache_setting.num_block; ++i) {
         _cache[i][31] = true;
@@ -67,10 +62,9 @@ void Cache::_Cache_Setup() {
 }
 
 void Cache::run_sim(const char *trace_file) {
-    std::ifstream in_file;
+    std::ifstream in_file(trace_file, std::ios::in);
     char trace_line[13];
 
-    in_file.open(trace_file, std::ios::in);
     if (in_file.fail()) {
         std::cerr << "Open trace file error" << std::endl;
         exit(-1);
@@ -95,6 +89,8 @@ void Cache::run_sim(const char *trace_file) {
 
 void Cache::dump_result(const char *trace_file) {
 
+    // TODO: dump simulation results to yaml file,
+    //       then add another yaml parser to verify correctness.
     std::cout << "===================================" << std::endl;
     std::cout << "Test file: " << trace_file << std::endl;
     std::cout << "Cache size: " << _cache_setting.cache_size << "KB"
@@ -134,14 +130,16 @@ void Cache::dump_result(const char *trace_file) {
     std::cout << "Number of cache access： " << _counter.access << std::endl;
     std::cout << "Number of cache load： " << _counter.load << std::endl;
     std::cout << "Number of cache store： " << _counter.store << std::endl;
-    std::cout << "Cache hit rate: " << _counter.avg_hit_rate << std::endl;
+    std::cout << "Cache hit rate: " << std::setprecision(6)
+              << _counter.avg_hit_rate << std::endl;
     std::cout << "===================================" << std::endl;
 }
 
 void Cache::dump_CACTI_config() {
-    std::ofstream out_file("cacti.cfg");
+    std::ofstream out_file("cacti.cfg", std::ios::out);
 
-    if (!out_file) {
+    // BUG: The output file doesn't work in CACTI, please fix it.
+    if (out_file.fail()) {
         std::cerr << "Unable to generate cacti.cfg" << std::endl;
         exit(-1);
     }
@@ -213,10 +211,8 @@ void Cache::dump_CACTI_config() {
 }
 
 bool Cache::_CacheHandler(char *trace_line) {
-    bool is_load = false;
-    bool is_store = false;
-    bool is_space = false;
-    bool hit = false;
+    bool is_load(false), is_store(false), is_space(false);
+    bool hit(false);
 
     switch (trace_line[0]) {
     case 'l':
@@ -272,7 +268,7 @@ bool Cache::_CacheHandler(char *trace_line) {
     return true;
 }
 
-bool Cache::_IsHit(std::bitset<32> addr) {
+bool Cache::_IsHit(const std::bitset<32> &addr) {
     bool ret = false;
 
     if (_cache_setting.associativity == direct_mapped) {
@@ -362,8 +358,9 @@ void Cache::_Read(const std::bitset<32> &addr) {
 void Cache::_Replace(const std::bitset<32> &addr) {
     // Find victim block
     switch (_cache_setting.associativity) {
-    case direct_mapped: // nothing to do, replacement policy is not applicable
-                        // on direct mapped cache
+    case direct_mapped:
+        // nothing to do, replacement policy is not applicable
+        // on direct mapped cache
         break;
     case full_associative:
         if (_cache_setting.replacement_policy == RANDOM) {
