@@ -5,6 +5,7 @@
 #include <bitset>
 #include <cassert>
 #include <exception>
+#include <iomanip>
 #include <random>
 #include <vector>
 
