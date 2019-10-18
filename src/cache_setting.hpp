@@ -1,5 +1,5 @@
-#ifndef CACHE_DEF_HPP
-#define CACHE_DEF_HPP
+#ifndef CACHE_SETTING_HPP
+#define CACHE_SETTING_HPP
 
 #include <cstdint>
 
@@ -33,16 +33,10 @@ struct CACHE_SET {
     ulint cache_sets; // cache set
     ulint num_block;  // # of lines
     ulint num_sets;   // # of sets
-    CACHE_SET() {
-        associativity = direct_mapped;
-        replacement_policy = NONE;
-        write_policy = write_back;
-        cache_size = 0;
-        block_size = 0;
-        cache_sets = 0;
-        num_block = 0;
-        num_sets = 0;
-    }
+    CACHE_SET()
+        : associativity(direct_mapped), replacement_policy(NONE),
+          write_policy(write_back), cache_size(0), block_size(0), cache_sets(0),
+          num_block(0), num_sets(0) {}
 };
 
 #endif

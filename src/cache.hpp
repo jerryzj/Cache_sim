@@ -22,23 +22,14 @@ struct COUNTER {
     double avg_hit_rate;   // average hit rate
     double load_hit_rate;  // hit rate of loads
     double store_hit_rate; // hit rarte of stores
-    COUNTER() {
-        access = 0;
-        load = 0;
-        store = 0;
-        space = 0;
-        hit = 0;
-        load_hit = 0;
-        store_hit = 0;
-        avg_hit_rate = 0.0;
-        load_hit_rate = 0.0;
-        store_hit_rate = 0.0;
-    }
+    COUNTER()
+        : access(0), load(0), store(0), hit(0), load_hit(0), store_hit(0),
+          avg_hit_rate(0.0), load_hit_rate(0.0), store_hit_rate(0.0) {}
 };
 
 class Cache {
   public:
-    Cache(const char *config_filename);
+    explicit Cache(const char *config_filename);
     ~Cache();
     void run_sim(const char *trace_file); // Load trace file and run simulation
     void dump_result(const char *trace_file); // Print simulation result
@@ -46,12 +37,11 @@ class Cache {
 
   private:
     // Main handling Functions
-    bool _CacheHandler(char *trace_line);    // Main Instruction processing
-    bool _IsHit(std::bitset<32> addr);       // Data is hit/miss
-    void _Read(const std::bitset<32> &addr); // Read data from memory
-    void _Drop();                            // Write data to memory
-    void _Replace(
-        const std::bitset<32> &addr); // No available block, replace cache block
+    bool _CacheHandler(char *trace_line);       // Main Instruction processing
+    bool _IsHit(const std::bitset<32> &addr);   // Data is hit/miss
+    void _Read(const std::bitset<32> &addr);    // Read data from memory
+    void _Drop();                               // Write data to memory
+    void _Replace(const std::bitset<32> &addr); // Replace cache block
 
     // Utility functions
     void _Cache_Setup(); // Setup cache

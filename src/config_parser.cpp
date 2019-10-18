@@ -78,11 +78,14 @@ bool readParameter(const std::string &conf, ulint &para) {
 }
 
 std::list<std::string> readFile(const char *config_filename) {
-    std::ifstream file;
+    std::ifstream file(config_filename, std::ios::in);
     std::string temp;
     std::list<std::string> ans;
 
-    file.open(config_filename, std::ios::in);
+    if (file.fail()) {
+        std::cerr << "Open config file error" << std::endl;
+        exit(-1);
+    }
     while (getline(file, temp)) {
         temp.erase(remove(temp.begin(), temp.end(), '\r'), temp.end());
         ans.push_back(temp);
@@ -93,33 +96,34 @@ std::list<std::string> readFile(const char *config_filename) {
 
 std::list<std::string> removeComments(const std::list<std::string> &source) {
     std::list<std::string> ans;
-    bool status = 0; // false:nothing, true:under block comment
-    for (std::string line : source) {
-        if (status == 0 && (ans.empty() || ans.back() != "")) {
+    bool status(false); // false:nothing, true:under block comment
+
+    for (auto line : source) {
+        if (status == false && (ans.empty() || ans.back() != "")) {
             ans.push_back("");
         }
-        int i = 0;
+        int i(0);
         while (i < static_cast<int>(line.size())) {
             if (line.substr(i, 2) == "//") {
-                if (status == 0)
+                if (status == false)
                     break; // break  while(i<line.size()){...}   loop
             } else if (line.substr(i, 1) == "#") {
-                if (status == 0)
+                if (status == false)
                     break; // break  while(i<line.size()){...}   loop
             } else if (line.substr(i, 2) == "/*") {
-                if (status == 0) {
-                    status = 1;
+                if (status == false) {
+                    status = true;
                     i += 2;
                     continue;
                 }
             } else if (line.substr(i, 2) == "*/") {
-                if (status == 1) {
-                    status = 0;
+                if (status == true) {
+                    status = false;
                     i += 2;
                     continue;
                 }
             }
-            if (status == 0) {
+            if (status == false) {
                 ans.back().push_back(line[i]);
             }
             i++;
