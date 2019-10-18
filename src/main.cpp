@@ -3,7 +3,7 @@
 
 int main(int argc, char *argv[]) {
     ArgumentParser parser("Argument parser");
-    parser.add_argument("-t", "Trace file");
+    parser.add_argument("-t", "Program trace file");
     parser.add_argument("-c", "Cache config file");
     try {
         parser.parse(argc, argv);
