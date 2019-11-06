@@ -23,7 +23,7 @@ struct COUNTER {
     double avg_hit_rate;   // average hit rate
     double load_hit_rate;  // hit rate of loads
     double store_hit_rate; // hit rarte of stores
-    COUNTER()
+    explicit COUNTER()
         : access(0), load(0), store(0), hit(0), load_hit(0), store_hit(0),
           avg_hit_rate(0.0), load_hit_rate(0.0), store_hit_rate(0.0) {}
 };
@@ -58,7 +58,7 @@ class Cache {
     COUNTER _counter;                 // Runtime statistics
     std::bitset<32> _cache[MAX_LINE]; // Cache status
     // [31]: valid bit [30]: hit [29]: dirty bit [28]~[0]: data
-    // vector<uint> _LRU_priority;    // Priority table for LRU
+    // std::vector<uint> _LRU_priority;    // Priority table for LRU
     ulint _current_block; // The block being processed
     ulint _current_set;   // The set being processed
     uint _bit_block;      // # of bits of a block

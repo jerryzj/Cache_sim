@@ -269,7 +269,7 @@ bool Cache::_CacheHandler(char *trace_line) {
 }
 
 bool Cache::_IsHit(const std::bitset<32> &addr) {
-    bool ret = false;
+    bool ret(false);
 
     if (_cache_setting.associativity == direct_mapped) {
         _current_block = _GetCacheIndex(addr);

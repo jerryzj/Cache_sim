@@ -54,7 +54,7 @@ CACHE_SET readConfig(const char *config_filename) {
     case 2:
         _cache_conf.replacement_policy = LRU;
         break;
-    // Add your own policy here, like RRIP
+    // Add your own policy here, ex: RRIP
     default:
         std::cerr << "Invalid replacement policy" << std::endl;
         std::exit(-1);
