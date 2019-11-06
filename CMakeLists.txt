@@ -12,8 +12,8 @@ set(CMAKE_BUILD_TYPE "DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O2 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -flto=thin")
 set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address,undefined -fno-optimize-sibling-calls")
-## Use C++17 std
-set(CMAKE_CXX_STANDARD 17)
+## Use C++20 std
+set(CMAKE_CXX_STANDARD 20)
 ## Use clang instead of gcc
 set(CMAKE_CXX_COMPILER "clang++")
 
@@ -22,4 +22,4 @@ file(GLOB HEADERS "src/*.hpp")
 clangformat_setup(${SOURCES} ${HEADERS})
 
 add_executable(cache_sim ${SOURCES})
-add_dependencies(cache_sim clangformat)
+#add_dependencies(cache_sim clangformat)
