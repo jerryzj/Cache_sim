@@ -4,9 +4,9 @@ Cache Simulator for EE3450 course
 
 ## Package requirement
 
-* clang
-* cmake
-* clang-format
+  * clang
+  * cmake
+  * clang-format
 
 ## Build
 
@@ -16,8 +16,8 @@ cmake ..
 make -j
 ```
 
-* Before compiling, it'll automatically format your codes using clang-format.
-* The executable will be named as **cache_sim**.
+  * Before compiling, it'll automatically format your codes using clang-format.
+  * The executable will be named as **cache_sim**.
 
 ## Run simulation
 
