@@ -37,13 +37,13 @@ class ArgumentParser {
   public:
     class ArgumentNotFound : public std::runtime_error {
       public:
-        ArgumentNotFound(ArgumentParser::Argument &arg) noexcept
+        explicit ArgumentNotFound(ArgumentParser::Argument &arg) noexcept
             : std::runtime_error(
                   ("Required argument not found: " + arg._name).c_str()) {}
     };
 
-    ArgumentParser(const std::string &desc) : _desc(desc), _help(false) {}
-    ArgumentParser(const std::string desc, int argc, char *argv[])
+    explicit ArgumentParser(const std::string &desc) : _desc(desc), _help(false) {}
+    explicit ArgumentParser(const std::string &desc, int argc, char *argv[])
         : ArgumentParser(desc) {
         parse(argc, argv);
     }
