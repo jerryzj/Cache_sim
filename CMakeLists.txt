@@ -22,4 +22,4 @@ file(GLOB HEADERS "src/*.hpp")
 clangformat_setup(${SOURCES} ${HEADERS})
 
 add_executable(cache_sim ${SOURCES})
-#add_dependencies(cache_sim clangformat)
+add_dependencies(cache_sim clangformat)
