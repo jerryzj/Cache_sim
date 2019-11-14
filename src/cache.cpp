@@ -1,7 +1,8 @@
 #include "cache.hpp"
 
 Cache::Cache(const char *config_filename)
-    : _current_block(0), _current_set(0), _bit_block(0), _bit_line(0) {
+    : _current_block(0), _current_set(0), _bit_block(0), _bit_line(0),
+      _bit_tag(0), _bit_set(0) {
 
     for (auto i : _cache) {
         i.reset(); // reset cache
