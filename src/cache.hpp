@@ -24,8 +24,9 @@ struct COUNTER {
     double load_hit_rate;  // hit rate of loads
     double store_hit_rate; // hit rarte of stores
     explicit COUNTER()
-        : access(0), load(0), store(0), space(0), hit(0), load_hit(0), store_hit(0),
-          avg_hit_rate(0.0), load_hit_rate(0.0), store_hit_rate(0.0) {}
+        : access(0), load(0), store(0), space(0), hit(0), load_hit(0),
+          store_hit(0), avg_hit_rate(0.0), load_hit_rate(0.0),
+          store_hit_rate(0.0) {}
 };
 
 class Cache {

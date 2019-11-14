@@ -42,7 +42,8 @@ class ArgumentParser {
                   ("Required argument not found: " + arg._name).c_str()) {}
     };
 
-    explicit ArgumentParser(const std::string &desc) : _desc(desc), _help(false) {}
+    explicit ArgumentParser(const std::string &desc)
+        : _desc(desc), _help(false) {}
     explicit ArgumentParser(const std::string &desc, int argc, char *argv[])
         : ArgumentParser(desc) {
         parse(argc, argv);
