@@ -31,11 +31,14 @@ struct COUNTER {
 
 class Cache {
   public:
-    explicit Cache(const char *config_filename);
+    // explicit Cache(const char *config_filename);
+    explicit Cache(CACHE_SET &cfg);
     ~Cache();
     void run_sim(const char *trace_file); // Load trace file and run simulation
+    bool CheckIfHit(const std::bitset<32> &addr);
     void dump_result(const char *trace_file); // Print simulation result
     void dump_CACTI_config(); // Generate CACTI configuration file
+    friend class Simulator;
 
 protected:
     // Main handling Functions
@@ -44,7 +47,7 @@ protected:
     void _Read(const std::bitset<32> &addr);    // Read data from memory
     void _Drop();                               // Write data to memory
     void _Replace(const std::bitset<32> &addr); // Replace cache block
-
+    std::bitset<32> _Evicted(const std::bitset<32> &addr);
     // Utility functions
     void _Cache_Setup(); // Setup cache
     void
@@ -53,11 +56,14 @@ protected:
     bool _CheckIdent(const std::bitset<32> &cache, const std::bitset<32> &addr);
     // Check whether current address is in certain cache block
     void _CalHitRate(); // Caculate hit rate
-
+    void _Update();
     // Variables
     CACHE_SET _cache_setting;         // Basic configurations
     COUNTER _counter;                 // Runtime statistics
     std::bitset<32> _cache[MAX_LINE]; // Cache status
+    std::bitset<32> _poten_victim;
+    std::bitset<32> _cur_addr;
+    bool _has_evicted;
     // [31]: valid bit [30]: hit [29]: dirty bit [28]~[0]: data
     // std::vector<uint> _LRU_priority;    // Priority table for LRU
     ulint _current_block; // The block being processed

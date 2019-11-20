@@ -1,13 +1,13 @@
 #include "cache.hpp"
 
-Cache::Cache(const char *config_filename)
+Cache::Cache(CACHE_SET &cfg)
     : _current_block(0), _current_set(0), _bit_block(0), _bit_line(0),
       _bit_tag(0), _bit_set(0) {
 
     for (auto i : _cache) {
         i.reset(); // reset cache
     }
-    _cache_setting = readConfig(config_filename);
+    _cache_setting = cfg;
     _Cache_Setup();
 }
 
@@ -211,6 +211,10 @@ void Cache::dump_CACTI_config() {
     out_file.close();
 }
 
+bool Cache::CheckIfHit(const std::bitset<32> &addr) {
+    return this->_IsHit(addr);
+}
+
 bool Cache::_CacheHandler(char *trace_line) {
     bool is_load(false), is_store(false), is_space(false);
     bool hit(false);
@@ -399,6 +403,94 @@ void Cache::_Drop() {
     // Set dirty bit and hit bit to flase
     _cache[_current_block][29] = false;
     _cache[_current_block][30] = false;
+}
+
+std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
+    _cur_addr = addr;
+    _has_evicted = false;
+    bool space(false);
+
+    if (_IsHit(addr)) {
+        _poten_victim |= std::bitset<32>(0xffffffff);
+    } else {
+        switch (_cache_setting.associativity) {
+        case direct_mapped:
+            _current_block = _GetCacheIndex(addr);
+            if (_cache[_current_block][30]) {
+                _has_evicted = true;
+                _poten_victim = this->_cache[_current_block];
+            }
+            break;
+        case full_associative:
+            for (uint i = 0; i < _cache_setting.num_block; ++i) {
+                if (!_cache[i][30]) {
+                    space = true;
+                    _poten_victim |= std::bitset<32>(0xffffffff);
+                    break;
+                }
+            }
+            if (space)
+                break;
+            _has_evicted = true;
+            if (_cache_setting.replacement_policy == RANDOM) {
+                std::random_device rd;
+                std::mt19937_64 generator(rd());
+                std::uniform_int_distribution<int> unif(0, INT32_MAX);
+                do {
+                    _current_block = static_cast<ulint>(
+                        unif(generator) /
+                        (INT32_MAX / _cache_setting.num_block + 1));
+                } while (_CheckIdent(_cache[_current_block], addr));
+                _poten_victim = _cache[_current_block];
+
+            } else if (_cache_setting.replacement_policy == LRU) {
+                // Do sth.
+            }
+            break;
+        case set_associative:
+            _current_set = _GetCacheIndex(addr);
+
+            for (ulint i = (_current_set * _cache_setting.cache_sets);
+                i < ((_current_set + 1)) * _cache_setting.cache_sets; i++) {
+                if (!_cache[i][30]) {
+                    space = true;
+                    _poten_victim |= std::bitset<32>(0xffffffff);
+                    break;
+                }
+            }
+            if (space)
+                break;
+            _has_evicted = true;
+            if (_cache_setting.replacement_policy == RANDOM) {
+                std::random_device rd;
+                std::mt19937_64 generator(rd());
+                std::uniform_int_distribution<int> unif(0, INT32_MAX);
+                do {
+                    ulint temp = static_cast<ulint>(
+                        unif(generator) /
+                        (INT32_MAX / _cache_setting.cache_sets + 1));
+                    _current_block =
+                        _current_set * _cache_setting.cache_sets + temp;
+                } while (_CheckIdent(_cache[_current_block], addr));
+                _poten_victim = _cache[_current_block];
+
+            } else if (_cache_setting.replacement_policy == LRU) {
+                // Do sth.
+            }
+            break;
+        }
+    }
+    
+
+    return _poten_victim;
+}
+
+void Cache::_Update() {
+    if (_has_evicted) {
+        _WriteToBlock(_cur_addr);
+    } else {
+        _Read(_cur_addr);
+    }
 }
 
 void Cache::_WriteToBlock(const std::bitset<32> &addr) {
