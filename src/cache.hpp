@@ -29,6 +29,18 @@ struct COUNTER {
           store_hit_rate(0.0) {}
 };
 
+/**
+ * Convert:            Memory address                 <-   ->                               Cache 
+ *                     layout(32 bits)                   |                             layout(32 bits)
+ *   (MSB)                                  (LSB)        |         (MSB)                                      (LSB)
+ * - Direct-Mapped:                                      |
+ *   |     bit_tag      |  bit_line | bit_block |        |         | valid bit | hit | dirty bit | tag-bit [28:0] |
+ * - Set-Associativity:                                  |
+ *   |     bit_tag      |  bit_set  | bit_block |        |
+ * - Fully-Associativity:                                |
+ *   |            bit_tag           | bit_block |        |
+ * 
+**/
 class Cache {
   public:
     explicit Cache(const char *config_filename);
