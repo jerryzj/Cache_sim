@@ -37,7 +37,7 @@ class Cache {
     void dump_result(const char *trace_file); // Print simulation result
     void dump_CACTI_config(); // Generate CACTI configuration file
 
-  private:
+protected:
     // Main handling Functions
     bool _CacheHandler(char *trace_line);       // Main Instruction processing
     bool _IsHit(const std::bitset<32> &addr);   // Data is hit/miss
