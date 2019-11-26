@@ -2,6 +2,7 @@
 #define SIMULATOR_HPP
 
 #include "cache.hpp"
+#include "victim_cache.hpp"
 #include "config_parser.hpp"
 #include <cstdint>
 #include <vector>
@@ -40,7 +41,7 @@ class Simulator {
 
   private:
     Cache *main_cache;
-    Cache *victim_cache;
+    VictimCache *victim_cache;
     std::string trace_file;
     std::string cache_cfg_file;
 
