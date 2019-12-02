@@ -451,7 +451,7 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
             _current_set = _GetCacheIndex(addr);
 
             for (ulint i = (_current_set * _cache_setting.cache_sets);
-                i < ((_current_set + 1)) * _cache_setting.cache_sets; i++) {
+                 i < ((_current_set + 1)) * _cache_setting.cache_sets; i++) {
                 if (!_cache[i][30]) {
                     space = true;
                     _poten_victim |= std::bitset<32>(0xffffffff);
@@ -480,7 +480,6 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
             break;
         }
     }
-    
 
     return _poten_victim;
 }

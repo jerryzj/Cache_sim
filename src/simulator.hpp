@@ -2,8 +2,8 @@
 #define SIMULATOR_HPP
 
 #include "cache.hpp"
-#include "victim_cache.hpp"
 #include "config_parser.hpp"
+#include "victim_cache.hpp"
 #include <cstdint>
 #include <vector>
 

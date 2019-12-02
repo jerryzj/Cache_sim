@@ -1,7 +1,7 @@
-#include "victim_cache.hpp"
 #include "cache.hpp"
-VictimCache::VictimCache(CACHE_SET cache_setting): _current_block(0), _current_set(0), _bit_block(0), _bit_line(0),
-      _bit_tag(0), _bit_set(0), _cache_setting(cache_setting) {
+#include "victim_cache.hpp"
+VictimCache::VictimCache(CACHE_SET cache_setting) : Cache(cache_setting) {
+    _cache_setting = cache_setting;
     for (auto i : _cache) {
         i.reset(); // reset cache
     }
@@ -10,11 +10,12 @@ VictimCache::VictimCache(CACHE_SET cache_setting): _current_block(0), _current_s
 
 VictimCache::~VictimCache() = default;
 
-bool VictimCache::_IsHit(const std::bitset<32> &addr, const std::bitset<32> &victim_addr) {
+bool VictimCache::_IsHit(const std::bitset<32> &addr,
+                         const std::bitset<32> &victim_addr) {
     bool ret(false);
-    if(_IsHit(addr)) {
+    if (_IsHit(addr)) {
         _WriteToBlock(victim_addr);
-        ret = true; 
+        ret = true;
     }
     return ret;
 }
@@ -22,9 +23,3 @@ bool VictimCache::_IsHit(const std::bitset<32> &addr, const std::bitset<32> &vic
 void VictimCache::_Insert(const std::bitset<32> &victim_addr) {
     _Replace(victim_addr);
 }
-
-
-
-
-
-

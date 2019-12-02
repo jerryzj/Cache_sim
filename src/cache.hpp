@@ -40,7 +40,7 @@ class Cache {
     void dump_CACTI_config(); // Generate CACTI configuration file
     friend class Simulator;
 
-protected:
+  protected:
     // Main handling Functions
     bool _CacheHandler(char *trace_line);       // Main Instruction processing
     bool _IsHit(const std::bitset<32> &addr);   // Data is hit/miss
