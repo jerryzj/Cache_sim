@@ -13,7 +13,7 @@ VictimCache::~VictimCache() = default;
 bool VictimCache::_IsHit(const std::bitset<32> &addr,
                          const std::bitset<32> &victim_addr) {
     bool ret(false);
-    if (_IsHit(addr)) {
+    if (Cache::_IsHit(addr)) {
         _WriteToBlock(victim_addr);
         ret = true;
     }
