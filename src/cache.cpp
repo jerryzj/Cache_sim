@@ -297,8 +297,9 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
                     break;
                 }
             }
-            if (space)
+            if (space) {
                 break;
+            }
             _has_evicted = true;
             if (_cache_setting.replacement_policy == RANDOM) {
                 std::random_device rd;
@@ -326,8 +327,9 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
                     break;
                 }
             }
-            if (space)
+            if (space) {
                 break;
+            }
             _has_evicted = true;
             if (_cache_setting.replacement_policy == RANDOM) {
                 std::random_device rd;
