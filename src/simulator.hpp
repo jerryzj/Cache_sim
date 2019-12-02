@@ -42,8 +42,8 @@ class Simulator {
   private:
     Cache *main_cache;
     VictimCache *victim_cache;
-    std::string trace_file;
     std::string cache_cfg_file;
+    std::string trace_file;
 
     bool _has_victim;
     CACHE_SET _cache_setting;
