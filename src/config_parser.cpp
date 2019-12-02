@@ -65,8 +65,10 @@ CACHE_SET readConfig(const char *config_filename) {
     return _cache_conf;
 }
 
-bool sizeCheck(ulint size) {
-    return ~((size < 1) || (size >= 262144) || (size & (~size + 1)) != size);
+bool sizeCheck(const ulint &size) {
+    ulint _size = size;
+    return ~((_size < 1) || (_size >= 262144) ||
+             (_size & (~_size + 1)) != _size);
 }
 
 bool readParameter(const std::string &conf, ulint &para) {
