@@ -125,7 +125,6 @@ void Simulator::RunSimulation() {
 
 bool Simulator::_CacheHandler(char *trace_line) {
     bool is_load(false), is_store(false), is_space(false);
-    bool hit(false);
 
     switch (trace_line[0]) {
     case 'l':
