@@ -17,9 +17,7 @@ class Cache {
     // explicit Cache(const char *config_filename);
     explicit Cache(CACHE_SET &cfg);
     ~Cache();
-    void run_sim(const char *trace_file); // Load trace file and run simulation
     bool CheckIfHit(const std::bitset<32> &addr);
-    void dump_result(const char *trace_file); // Print simulation result
     void dump_CACTI_config(); // Generate CACTI configuration file
     friend class Simulator;
 
@@ -38,7 +36,6 @@ class Cache {
     ulint _GetCacheIndex(const std::bitset<32> &addr); // Get index of block
     bool _CheckIdent(const std::bitset<32> &cache, const std::bitset<32> &addr);
     // Check whether current address is in certain cache block
-    void _CalHitRate(); // Caculate hit rate
     void _Update();
     // Variables
     CACHE_SET _cache_setting;         // Basic configurations

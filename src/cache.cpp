@@ -62,32 +62,6 @@ void Cache::_Cache_Setup() {
     }
 }
 
-void Cache::run_sim(const char *trace_file) {
-    std::ifstream in_file(trace_file, std::ios::in);
-    char trace_line[13];
-
-    if (in_file.fail()) {
-        std::cerr << "Open trace file error" << std::endl;
-        exit(-1);
-    }
-
-    while (!in_file.eof()) {
-        try {
-            in_file.getline(trace_line, 13);
-            bool is_success = _CacheHandler(trace_line);
-            if (!is_success) {
-                throw std::logic_error("Cache Handler failed");
-            }
-        } catch (std::exception &ex) {
-            in_file.close();
-            std::cerr << ex.what() << std::endl;
-            exit(-1);
-        }
-    }
-    in_file.close();
-    _CalHitRate();
-}
-
 void Cache::dump_CACTI_config() {
     std::ofstream out_file("cacti.cfg", std::ios::out);
 
