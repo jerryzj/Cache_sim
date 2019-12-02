@@ -26,8 +26,8 @@ struct COUNTER {
 
 class Simulator {
   public:
-    Simulator::Simulator(std::string &cache_cfg, std::string &program_trace);
-    Simulator::~Simulator();
+    Simulator(std::string &cache_cfg, std::string &program_trace);
+    ~Simulator();
     // void run_sim(const char *trace_file);       // Load trace file and run
     // simulation
     void RunSimulation();
