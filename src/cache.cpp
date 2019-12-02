@@ -88,54 +88,6 @@ void Cache::run_sim(const char *trace_file) {
     _CalHitRate();
 }
 
-void Cache::dump_result(const char *trace_file) {
-
-    // TODO: dump simulation results to yaml file,
-    //       then add another yaml parser to verify correctness.
-    std::cout << "===================================" << std::endl;
-    std::cout << "Test file: " << trace_file << std::endl;
-    std::cout << "Cache size: " << _cache_setting.cache_size << "KB"
-              << std::endl;
-    std::cout << "Cache block size: " << _cache_setting.block_size << "B"
-              << std::endl;
-    switch (_cache_setting.associativity) {
-    case direct_mapped:
-        std::cout << "Associativity: direct_mapped" << std::endl;
-        break;
-    case set_associative:
-        std::cout << "Associativity: " << _cache_setting.cache_sets
-                  << "-way set_associative" << std::endl;
-        break;
-    case full_associative:
-        std::cout << "Associativity: fully_associative" << std::endl;
-        break;
-    default:
-        std::cerr << "Error associtivity setting" << std::endl;
-        exit(-1);
-    }
-    switch (_cache_setting.replacement_policy) {
-    case NONE:
-        std::cout << "Replacement policy: None" << std::endl;
-        break;
-    case RANDOM:
-        std::cout << "Replacement policy: Random" << std::endl;
-        break;
-    case LRU:
-        std::cout << "Replacement policy: LRU" << std::endl;
-        break;
-    default:
-        std::cerr << "Error replacement setting" << std::endl;
-        exit(-1);
-    }
-    std::cout << "\n";
-    std::cout << "Number of cache access： " << _counter.access << std::endl;
-    std::cout << "Number of cache load： " << _counter.load << std::endl;
-    std::cout << "Number of cache store： " << _counter.store << std::endl;
-    std::cout << "Cache hit rate: " << std::setprecision(6)
-              << _counter.avg_hit_rate << std::endl;
-    std::cout << "===================================" << std::endl;
-}
-
 void Cache::dump_CACTI_config() {
     std::ofstream out_file("cacti.cfg", std::ios::out);
 
@@ -213,64 +165,6 @@ void Cache::dump_CACTI_config() {
 
 bool Cache::CheckIfHit(const std::bitset<32> &addr) {
     return this->_IsHit(addr);
-}
-
-bool Cache::_CacheHandler(char *trace_line) {
-    bool is_load(false), is_store(false), is_space(false);
-    bool hit(false);
-
-    switch (trace_line[0]) {
-    case 'l':
-        is_load = true;
-        break;
-    case 's':
-        is_store = true;
-        break;
-    case '\0':
-        is_space = true;
-        break;
-    default:
-        std::cerr << "Undefined instruction type." << std::endl;
-        std::cerr << "Error line: " << trace_line << std::endl;
-        return false;
-    }
-    auto temp = strtoul(trace_line + 2, nullptr, 16);
-    std::bitset<32> addr(temp);
-    hit = _IsHit(addr);
-
-    if (hit && is_load) {
-        ++_counter.access;
-        ++_counter.load;
-        ++_counter.load_hit;
-        ++_counter.hit;
-    } else if (hit && is_store) {
-        ++_counter.access;
-        ++_counter.store;
-        ++_counter.store_hit;
-        ++_counter.hit;
-        // If write back, set dirty bit
-        if (_cache_setting.write_policy == write_back) {
-            _cache[_current_block][29] = true;
-        }
-    } else if ((!hit) && is_load) {
-        ++_counter.access;
-        ++_counter.load;
-        _Read(addr);
-    } else if ((!hit) && is_store) {
-        ++_counter.access;
-        ++_counter.store;
-        _Read(addr);
-        if (_cache_setting.write_policy == write_back) {
-            _cache[_current_block][29] = true; // set dirty bit
-        }
-    } else if (is_space) {
-        ++_counter.space;
-    } else {
-        std::cerr << "Unexpected error in _CacheHandler()" << std::endl;
-        std::cerr << "ERROR line: " << trace_line << std::endl;
-        return false;
-    }
-    return true;
 }
 
 bool Cache::_IsHit(const std::bitset<32> &addr) {
@@ -525,15 +419,4 @@ bool Cache::_CheckIdent(const std::bitset<32> &cache,
         }
     }
     return true;
-}
-
-void Cache::_CalHitRate() {
-    assert(_counter.access != 0);
-    assert(_counter.load != 0);
-    assert(_counter.store != 0);
-    _counter.avg_hit_rate = static_cast<double>(_counter.hit) / _counter.access;
-    _counter.load_hit_rate =
-        static_cast<double>(_counter.load_hit) / _counter.load;
-    _counter.store_hit_rate =
-        static_cast<double>(_counter.store_hit) / _counter.store;
 }

@@ -12,23 +12,6 @@
 const int MAX_LINE = 65536;
 using uint = unsigned int;
 
-struct COUNTER {
-    ulint access;          // # of cache access
-    ulint load;            // # of load inst.
-    ulint store;           // # of store inst.
-    ulint space;           // # of space line
-    ulint hit;             // # of hit
-    ulint load_hit;        // # of load hit
-    ulint store_hit;       // # of store hit
-    double avg_hit_rate;   // average hit rate
-    double load_hit_rate;  // hit rate of loads
-    double store_hit_rate; // hit rarte of stores
-    explicit COUNTER()
-        : access(0), load(0), store(0), space(0), hit(0), load_hit(0),
-          store_hit(0), avg_hit_rate(0.0), load_hit_rate(0.0),
-          store_hit_rate(0.0) {}
-};
-
 class Cache {
   public:
     // explicit Cache(const char *config_filename);
@@ -59,7 +42,6 @@ class Cache {
     void _Update();
     // Variables
     CACHE_SET _cache_setting;         // Basic configurations
-    COUNTER _counter;                 // Runtime statistics
     std::bitset<32> _cache[MAX_LINE]; // Cache status
     std::bitset<32> _poten_victim;
     std::bitset<32> _cur_addr;
