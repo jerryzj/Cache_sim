@@ -1,5 +1,4 @@
 #include "argparse.hpp"
-//#include "cache.hpp"
 #include "simulator.hpp"
 
 int main(int argc, char *argv[]) {
@@ -22,13 +21,8 @@ int main(int argc, char *argv[]) {
     std::string trace_path = parser.get<std::string>("t");
 
     Simulator simulator(config_path, trace_path);
-
     simulator.RunSimulation();
     simulator.DumpResult();
-    // Cache cache(config_path.c_str());
-    // cache.run_sim(trace_path.c_str());
-    // cache.dump_result(trace_path.c_str());
-    // cache.dump_CACTI_config();
 
     return 0;
 }
