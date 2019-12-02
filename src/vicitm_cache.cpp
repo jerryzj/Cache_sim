@@ -1,6 +1,7 @@
 #include "cache.hpp"
 #include "victim_cache.hpp"
-VictimCache::VictimCache(CACHE_SET cache_setting) : Cache(cache_setting) {
+VictimCache::VictimCache(const CACHE_SET &cache_setting)
+    : Cache(cache_setting) {
     _cache_setting = cache_setting;
     for (auto i : _cache) {
         i.reset(); // reset cache

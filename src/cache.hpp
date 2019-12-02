@@ -15,7 +15,7 @@ using uint = unsigned int;
 class Cache {
   public:
     // explicit Cache(const char *config_filename);
-    explicit Cache(CACHE_SET &cfg);
+    explicit Cache(const CACHE_SET &cfg);
     ~Cache();
     bool CheckIfHit(const std::bitset<32> &addr);
     void dump_CACTI_config(); // Generate CACTI configuration file

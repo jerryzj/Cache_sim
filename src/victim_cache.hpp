@@ -11,7 +11,7 @@
 
 class VictimCache : public Cache {
   public:
-    explicit VictimCache(CACHE_SET cache_setting);
+    explicit VictimCache(const CACHE_SET &cache_setting);
     ~VictimCache();
     friend class Simulator;
 
