@@ -1,6 +1,7 @@
 #include "simulator.hpp"
 
-Simulator::Simulator(std::string &cache_cfg, std::string &program_trace)
+Simulator::Simulator(const std::string &cache_cfg,
+                     const std::string &program_trace)
     : cache_cfg_file(cache_cfg), trace_file(program_trace), _has_victim(false) {
     ReadConfig();
     CacheSetup();
@@ -14,7 +15,7 @@ void Simulator::ReadConfig() {
     // it's very un-maintainable to manipulate with plain text config file.
 
     CACHE_SET _cache_conf;
-    bool is_directedmap_flag = false;
+    bool is_directedmap_flag(false);
     std::list<std::string> config_raw, config_ready;
 
     // Preprocessing config file
@@ -79,8 +80,9 @@ void Simulator::ReadConfig() {
 
     while (!config_ready.empty() && config_ready.front() != "---")
         config_ready.pop_front();
-    if (config_ready.empty())
+    if (config_ready.empty()) {
         return;
+    }
     config_ready.pop_front();
 
     this->_has_victim = true;
@@ -152,7 +154,7 @@ bool Simulator::_CacheHandler(char *trace_line) {
             ++_counter.load_hit;
             ++_counter.hit;
         } else if (this->_has_victim) {
-            assert(this->victim_cache != NULL);
+            assert(this->victim_cache != nullptr);
             if (this->victim_cache->_IsHit(addr, poten_victim)) {
                 this->main_cache->_Update();
             } else {
@@ -169,7 +171,7 @@ bool Simulator::_CacheHandler(char *trace_line) {
             ++_counter.store_hit;
             ++_counter.hit;
         } else if (this->_has_victim) {
-            assert(this->victim_cache != NULL);
+            assert(this->victim_cache != nullptr);
             if (this->victim_cache->_IsHit(addr, poten_victim)) {
                 this->main_cache->_Update();
             } else {

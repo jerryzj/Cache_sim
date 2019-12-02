@@ -5,7 +5,6 @@
 #include "config_parser.hpp"
 #include "victim_cache.hpp"
 #include <cstdint>
-#include <vector>
 
 struct COUNTER {
     uint64_t access;       // # of cache access
@@ -26,15 +25,12 @@ struct COUNTER {
 
 class Simulator {
   public:
-    Simulator(std::string &cache_cfg, std::string &program_trace);
+    explicit Simulator(const std::string &cache_cfg,
+                       const std::string &program_trace);
     ~Simulator();
-    // void run_sim(const char *trace_file);       // Load trace file and run
-    // simulation
     void RunSimulation();
     void DumpResult();        // Print simulation result
     void dump_CACTI_config(); // Generate CACTI configuration file
-    void LoadProgram(std::string &trace_file) { this->trace_file = trace_file; }
-
     void ParseCacheConfig();
     void ReadConfig();
     void CacheSetup();
@@ -42,9 +38,8 @@ class Simulator {
   private:
     Cache *main_cache;
     VictimCache *victim_cache;
-    std::string cache_cfg_file;
-    std::string trace_file;
-
+    const std::string &cache_cfg_file;
+    const std::string &trace_file;
     bool _has_victim;
     CACHE_SET _cache_setting;
     CACHE_SET _victim_setting;
