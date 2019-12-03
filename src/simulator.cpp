@@ -1,5 +1,7 @@
 #include "simulator.hpp"
 
+extern int simulator_verbose_output;
+
 Simulator::Simulator(const std::string &cache_cfg,
                      const std::string &program_trace)
     : cache_cfg_file(cache_cfg), trace_file(program_trace), _has_victim(false) {
@@ -13,6 +15,9 @@ void Simulator::ReadConfig() {
     // TODO:
     // it's time to integrate other well-supported config format, i.e json, yaml
     // it's very un-maintainable to manipulate with plain text config file.
+    if (simulator_verbose_output) {
+        std::cout << "Reading cache config file" << std::endl;
+    }
 
     CACHE_SET _cache_conf;
     bool is_directedmap_flag(false);
@@ -53,7 +58,6 @@ void Simulator::ReadConfig() {
     if (_cache_conf.associativity == direct_mapped) {
         // Note that replacement policy is invalid for direct-mapped cache
         _cache_conf.replacement_policy = NONE;
-        assert(config_ready.empty());
         is_directedmap_flag = true;
     } else if (_cache_conf.associativity == set_associative) {
         // Read set size
@@ -78,6 +82,10 @@ void Simulator::ReadConfig() {
     }
     this->_cache_setting = _cache_conf;
 
+    if (simulator_verbose_output) {
+        std::cout << "Main cache parameters have been setup." << std::endl;
+    }
+
     while (!config_ready.empty() && config_ready.front() != "---")
         config_ready.pop_front();
     if (config_ready.empty()) {
@@ -89,6 +97,11 @@ void Simulator::ReadConfig() {
     _cache_conf.cache_size = stoi(config_ready.front());
     _cache_conf.associativity = full_associative;
     this->_victim_setting = _cache_conf;
+
+    if (simulator_verbose_output) {
+        std::cout << "Victim cache parameters have been setup." << std::endl;
+    }
+
     return;
 }
 
@@ -150,39 +163,71 @@ bool Simulator::_CacheHandler(char *trace_line) {
     if (is_load) {
         ++_counter.access;
         ++_counter.load;
+        if (simulator_verbose_output) {
+            std::cout << "Load " << temp;
+        }
+
         if (this->main_cache->CheckIfHit(addr)) {
             ++_counter.load_hit;
             ++_counter.hit;
+            if (simulator_verbose_output) {
+                std::cout << ", hit in main cache!";
+            }
         } else if (this->_has_victim) {
             assert(this->victim_cache != nullptr);
             if (this->victim_cache->_IsHit(addr, poten_victim)) {
                 ++_counter.load_hit;
                 ++_counter.hit;
+                if (simulator_verbose_output) {
+                    std::cout << ", hit in victim cache!";
+                }
                 this->main_cache->_Update();
             } else {
+                if (simulator_verbose_output) {
+                    std::cout << ", miss";
+                }
                 this->main_cache->_Update();
                 this->victim_cache->_Insert(poten_victim);
             }
         } else {
+            if (simulator_verbose_output) {
+                std::cout << ", miss";
+            }
             this->main_cache->_Read(addr);
         }
     } else if (is_store) {
         ++_counter.access;
         ++_counter.store;
+        if (simulator_verbose_output) {
+            std::cout << "Store " << temp;
+        }
+
         if (this->main_cache->CheckIfHit(addr)) {
             ++_counter.store_hit;
             ++_counter.hit;
+            if (simulator_verbose_output) {
+                std::cout << ", hit in main cache!";
+            }
         } else if (this->_has_victim) {
             assert(this->victim_cache != nullptr);
             if (this->victim_cache->_IsHit(addr, poten_victim)) {
                 ++_counter.store_hit;
                 ++_counter.hit;
+                if (simulator_verbose_output) {
+                    std::cout << ", hit in victim cache!";
+                }
                 this->main_cache->_Update();
             } else {
+                if (simulator_verbose_output) {
+                    std::cout << ", miss";
+                }
                 this->main_cache->_Update();
                 this->victim_cache->_Insert(poten_victim);
             }
         } else {
+            if (simulator_verbose_output) {
+                std::cout << ", miss";
+            }
             this->main_cache->_Read(addr);
         }
     } else if (is_space) {
@@ -191,6 +236,9 @@ bool Simulator::_CacheHandler(char *trace_line) {
         std::cerr << "Unexpected error in _CacheHandler()" << std::endl;
         std::cerr << "ERROR line: " << trace_line << std::endl;
         return false;
+    }
+    if (simulator_verbose_output) {
+        std::cout << std::endl;
     }
     return true;
 }
