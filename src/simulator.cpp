@@ -92,7 +92,6 @@ void Simulator::ReadConfig() {
         return;
     }
     config_ready.pop_front();
-
     this->_has_victim = true;
     _cache_conf.cache_size = stoi(config_ready.front());
     _cache_conf.associativity = full_associative;

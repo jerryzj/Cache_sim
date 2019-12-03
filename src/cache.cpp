@@ -12,7 +12,9 @@ Cache::Cache(const CACHE_SET &cfg)
     _cache_setting = cfg;
     _Cache_Setup();
 }
-
+Cache::Cache()
+    : _current_block(0), _current_set(0), _bit_block(0), _bit_line(0),
+      _bit_tag(0), _bit_set(0) {}
 Cache::~Cache() = default;
 
 void Cache::_Cache_Setup() {

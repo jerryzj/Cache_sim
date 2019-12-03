@@ -14,6 +14,7 @@ class VictimCache : public Cache {
     explicit VictimCache(const CACHE_SET &cache_setting);
     ~VictimCache();
     friend class Simulator;
+    void _Cache_Setup();
 
   private:
     bool _IsHit(const std::bitset<32> &addr,
