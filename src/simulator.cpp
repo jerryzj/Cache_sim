@@ -156,6 +156,8 @@ bool Simulator::_CacheHandler(char *trace_line) {
         } else if (this->_has_victim) {
             assert(this->victim_cache != nullptr);
             if (this->victim_cache->_IsHit(addr, poten_victim)) {
+                ++_counter.load_hit;
+                ++_counter.hit;
                 this->main_cache->_Update();
             } else {
                 this->main_cache->_Update();
@@ -173,6 +175,8 @@ bool Simulator::_CacheHandler(char *trace_line) {
         } else if (this->_has_victim) {
             assert(this->victim_cache != nullptr);
             if (this->victim_cache->_IsHit(addr, poten_victim)) {
+                ++_counter.store_hit;
+                ++_counter.hit;
                 this->main_cache->_Update();
             } else {
                 this->main_cache->_Update();
@@ -206,8 +210,25 @@ void Simulator::DumpResult() {
 
     // TODO: dump simulation results to yaml file,
     //       then add another yaml parser to verify correctness.
-    std::cout << "===================================" << std::endl;
     std::cout << "Test file: " << this->trace_file << std::endl;
+
+    std::cout << "===================================" << std::endl;
+    _ShowSettingInfo(this->_cache_setting);
+    if (this->_has_victim) {
+        std::cout << "-----------------------------------" << std::endl;
+        _ShowSettingInfo(this->_victim_setting);
+    }
+    std::cout << "===================================" << std::endl;
+
+    std::cout << "Number of cache access： " << _counter.access << std::endl;
+    std::cout << "Number of cache load： " << _counter.load << std::endl;
+    std::cout << "Number of cache store： " << _counter.store << std::endl;
+    std::cout << "Cache hit rate: " << std::setprecision(6)
+              << _counter.avg_hit_rate << std::endl;
+}
+
+void Simulator::_ShowSettingInfo(const CACHE_SET &_cache_setting) {
+
     std::cout << "Cache size: " << _cache_setting.cache_size << "KB"
               << std::endl;
     std::cout << "Cache block size: " << _cache_setting.block_size << "B"
@@ -241,11 +262,4 @@ void Simulator::DumpResult() {
         std::cerr << "Error replacement setting" << std::endl;
         exit(-1);
     }
-    std::cout << "\n";
-    std::cout << "Number of cache access： " << _counter.access << std::endl;
-    std::cout << "Number of cache load： " << _counter.load << std::endl;
-    std::cout << "Number of cache store： " << _counter.store << std::endl;
-    std::cout << "Cache hit rate: " << std::setprecision(6)
-              << _counter.avg_hit_rate << std::endl;
-    std::cout << "===================================" << std::endl;
 }
