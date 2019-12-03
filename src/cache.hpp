@@ -28,6 +28,8 @@ class Cache {
     void _Read(const std::bitset<32> &addr);    // Read data from memory
     void _Drop();                               // Write data to memory
     void _Replace(const std::bitset<32> &addr); // Replace cache block
+    std::bitset<32> _CvtToAddr(const std::bitset<32> &cache_line,
+                               ulint block_set);
     std::bitset<32> _Evicted(const std::bitset<32> &addr);
     // Utility functions
     void _Cache_Setup(); // Setup cache

@@ -275,6 +275,45 @@ void Cache::_Drop() {
     _cache[_current_block][30] = false;
 }
 
+std::bitset<32> Cache::_CvtToAddr(const std::bitset<32> &cache_line,
+                                  ulint block_set) {
+    std::bitset<32> addr;
+    addr.reset();
+    std::bitset<32> index(block_set);
+
+    switch (_cache_setting.associativity) {
+    case direct_mapped:
+
+        for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_line);
+             ++i, ++j) {
+            addr[i] = index[0];
+        }
+
+        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
+            addr[i] = cache_line[j];
+        }
+
+        break;
+    case full_associative:
+        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
+            addr[i] = cache_line[j];
+        }
+        break;
+    case set_associative:
+        for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_set);
+             ++i, ++j) {
+            addr[i] = index[j];
+        }
+
+        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
+            addr[i] = cache_line[j];
+        }
+        break;
+    }
+
+    return addr;
+}
+
 std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
     _cur_addr = addr;
     _has_evicted = false;
@@ -286,9 +325,11 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
         switch (_cache_setting.associativity) {
         case direct_mapped:
             _current_block = _GetCacheIndex(addr);
-            if (_cache[_current_block][30]) {
+            if (_cache[_current_block][30] &&
+                !_CheckIdent(_cache[_current_block], addr)) {
                 _has_evicted = true;
-                _poten_victim = this->_cache[_current_block];
+                _poten_victim =
+                    this->_CvtToAddr(_cache[_current_block], _current_block);
             }
             break;
         case full_associative:
@@ -312,7 +353,8 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
                         unif(generator) /
                         (INT32_MAX / _cache_setting.num_block + 1));
                 } while (_CheckIdent(_cache[_current_block], addr));
-                _poten_victim = _cache[_current_block];
+                _poten_victim =
+                    this->_CvtToAddr(_cache[_current_block], _current_block);
 
             } else if (_cache_setting.replacement_policy == LRU) {
                 // Do sth.
@@ -344,8 +386,8 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
                     _current_block =
                         _current_set * _cache_setting.cache_sets + temp;
                 } while (_CheckIdent(_cache[_current_block], addr));
-                _poten_victim = _cache[_current_block];
-
+                _poten_victim =
+                    this->_CvtToAddr(_cache[_current_block], _current_set);
             } else if (_cache_setting.replacement_policy == LRU) {
                 // Do sth.
             }
