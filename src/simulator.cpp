@@ -23,7 +23,7 @@ void Simulator::ReadConfig() {
     config_ready = removeComments(config_raw);
 
     // Assert config lines is in the right range
-    assert(config_ready.size() >= 3 && config_ready.size() <= 5);
+    assert(config_ready.size() >= 3 && config_ready.size() <= 9);
 
     // Read cache size
     assert(readParameter(config_ready.front(), _cache_conf.cache_size));
