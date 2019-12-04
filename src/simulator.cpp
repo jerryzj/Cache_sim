@@ -170,14 +170,17 @@ bool Simulator::_CacheHandler(char *trace_line) {
         if (this->main_cache->CheckIfHit(addr)) {
             ++_counter.load_hit;
             ++_counter.hit;
+            ++_counter.hit_in_main;
             if (simulator_verbose_output) {
                 std::cout << ", hit in main cache!";
             }
         } else if (this->_has_victim) {
             assert(this->victim_cache != nullptr);
-            if (this->victim_cache->_IsHit(addr, poten_victim)) {
+            if (this->main_cache->_has_evicted &&
+                this->victim_cache->_IsHit(addr, poten_victim)) {
                 ++_counter.load_hit;
                 ++_counter.hit;
+                ++_counter.hit_in_victim;
                 if (simulator_verbose_output) {
                     std::cout << ", hit in victim cache!";
                 }
@@ -205,6 +208,7 @@ bool Simulator::_CacheHandler(char *trace_line) {
         if (this->main_cache->CheckIfHit(addr)) {
             ++_counter.store_hit;
             ++_counter.hit;
+            ++_counter.hit_in_main;
             if (simulator_verbose_output) {
                 std::cout << ", hit in main cache!";
             }
@@ -213,6 +217,7 @@ bool Simulator::_CacheHandler(char *trace_line) {
             if (this->victim_cache->_IsHit(addr, poten_victim)) {
                 ++_counter.store_hit;
                 ++_counter.hit;
+                ++_counter.hit_in_victim;
                 if (simulator_verbose_output) {
                     std::cout << ", hit in victim cache!";
                 }
@@ -261,16 +266,30 @@ void Simulator::DumpResult() {
     std::cout << "Test file: " << this->trace_file << std::endl;
 
     std::cout << "===================================" << std::endl;
+    std::cout << "┌----------------┐" << std::endl;
+    std::cout << "│  Main Cache    │" << std::endl;
+    std::cout << "└----------------┘" << std::endl;
     _ShowSettingInfo(this->_cache_setting);
     if (this->_has_victim) {
         std::cout << "-----------------------------------" << std::endl;
+        std::cout << "┌----------------┐" << std::endl;
+        std::cout << "│  Victim Cache  │" << std::endl;
+        std::cout << "└----------------┘" << std::endl;
         _ShowSettingInfo(this->_victim_setting);
     }
     std::cout << "===================================" << std::endl;
 
-    std::cout << "Number of cache access： " << _counter.access << std::endl;
-    std::cout << "Number of cache load： " << _counter.load << std::endl;
-    std::cout << "Number of cache store： " << _counter.store << std::endl;
+    std::cout << "Number of cache access: " << _counter.access << std::endl;
+    std::cout << "Number of cache load: " << _counter.load << std::endl;
+    std::cout << "Number of cache store: " << _counter.store << std::endl;
+    std::cout << "Number of total cache hit: " << _counter.hit << std::endl;
+    if (this->_has_victim) {
+        std::cout << " - Number of hit in main cache: " << _counter.hit_in_main
+                  << std::endl;
+        std::cout << " - Number of hit in victim cache: "
+                  << _counter.hit_in_victim << std::endl;
+    }
+
     std::cout << "Cache hit rate: " << std::setprecision(6)
               << _counter.avg_hit_rate << std::endl;
 }

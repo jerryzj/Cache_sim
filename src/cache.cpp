@@ -54,7 +54,7 @@ void Cache::_Cache_Setup() {
         --_bit_set;
         break;
     default:
-        std::cerr << "Invlid mapping policy" << std::endl;
+        std::cerr << "Invalid mapping policy" << std::endl;
         exit(-1);
     }
     _bit_tag = (32ul - _bit_block - _bit_line - _bit_set);
@@ -276,14 +276,13 @@ void Cache::_Drop() {
 }
 
 std::bitset<32> Cache::_CvtToAddr(const std::bitset<32> &cache_line,
-                                  ulint block_set) {
+                                  const ulint block_set) {
     std::bitset<32> addr;
     addr.reset();
     std::bitset<32> index(block_set);
 
     switch (_cache_setting.associativity) {
     case direct_mapped:
-
         for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_line);
              ++i, ++j) {
             addr[i] = index[0];
