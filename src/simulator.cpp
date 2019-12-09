@@ -168,7 +168,6 @@ bool Simulator::_CacheHandler(char *trace_line) {
 
         if (this->main_cache->CheckIfHit(addr)) {
             ++_counter.load_hit;
-            ++_counter.hit;
             ++_counter.hit_in_main;
             if (simulator_verbose_output) {
                 std::cout << ", hit in main cache!";
@@ -178,7 +177,6 @@ bool Simulator::_CacheHandler(char *trace_line) {
             if (this->main_cache->_has_evicted &&
                 this->victim_cache->_IsHit(addr, poten_victim)) {
                 ++_counter.load_hit;
-                ++_counter.hit;
                 ++_counter.hit_in_victim;
                 if (simulator_verbose_output) {
                     std::cout << ", hit in victim cache!";
@@ -206,7 +204,6 @@ bool Simulator::_CacheHandler(char *trace_line) {
 
         if (this->main_cache->CheckIfHit(addr)) {
             ++_counter.store_hit;
-            ++_counter.hit;
             ++_counter.hit_in_main;
             if (simulator_verbose_output) {
                 std::cout << ", hit in main cache!";
@@ -215,7 +212,6 @@ bool Simulator::_CacheHandler(char *trace_line) {
             assert(this->victim_cache != nullptr);
             if (this->victim_cache->_IsHit(addr, poten_victim)) {
                 ++_counter.store_hit;
-                ++_counter.hit;
                 ++_counter.hit_in_victim;
                 if (simulator_verbose_output) {
                     std::cout << ", hit in victim cache!";
@@ -251,6 +247,7 @@ void Simulator::_CalHitRate() {
     assert(_counter.access != 0);
     assert(_counter.load != 0);
     assert(_counter.store != 0);
+    _counter.hit = _counter.hit_in_main + _counter.hit_in_victim;
     _counter.avg_hit_rate = static_cast<double>(_counter.hit) / _counter.access;
     _counter.load_hit_rate =
         static_cast<double>(_counter.load_hit) / _counter.load;
