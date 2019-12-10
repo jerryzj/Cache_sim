@@ -18,7 +18,7 @@ class Cache {
     explicit Cache(const CACHE_SET &cfg);
     explicit Cache();
     ~Cache();
-    bool CheckIfHit(const std::bitset<32> &addr);
+
     friend class Simulator;
 
   protected:
@@ -28,16 +28,18 @@ class Cache {
     void _Read(const std::bitset<32> &addr);    // Read data from memory
     void _Drop();                               // Write data to memory
     void _Replace(const std::bitset<32> &addr); // Replace cache block
-    std::bitset<32> _CvtToAddr(const std::bitset<32> &cache_line,
-                               ulint block_set);
     std::bitset<32> _Evicted(const std::bitset<32> &addr);
+
     // Utility functions
     void _Cache_Setup(); // Setup cache
     void
     _WriteToBlock(const std::bitset<32> &addr); // Write data to cache block
     ulint _GetCacheIndex(const std::bitset<32> &addr); // Get index of block
-    bool _CheckIdent(const std::bitset<32> &cache, const std::bitset<32> &addr);
     // Check whether current address is in certain cache block
+    bool _CheckIdent(const std::bitset<32> &cache, const std::bitset<32> &addr);
+
+    // Return a memory address by given line/block
+    std::bitset<32> _CvtToAddr(ulint block_set);
     void _Update();
     // Variables
     CACHE_SET _cache_setting;         // Basic configurations
