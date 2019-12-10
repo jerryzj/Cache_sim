@@ -12,18 +12,21 @@ Cache::Cache(const CACHE_SET &cfg)
     _cache_setting = cfg;
     _Cache_Setup();
 }
+
 Cache::Cache()
     : _has_evicted(false), _current_block(0), _current_set(0), _bit_block(0),
       _bit_line(0), _bit_tag(0), _bit_set(0) {}
+
 Cache::~Cache() = default;
 
 void Cache::_Cache_Setup() {
     assert(_cache_setting.block_size > 0);
-    if (_cache_setting.type == 0)
+    if (_cache_setting.type == L1) {
         _cache_setting.num_block =
             (_cache_setting.cache_size << 10) / _cache_setting.block_size;
-    else
+    } else {
         _cache_setting.num_block = _cache_setting.cache_size;
+    }
 
     auto temp = _cache_setting.block_size;
     while (temp != 0u) {
@@ -336,15 +339,13 @@ bool Cache::_CheckIdent(const std::bitset<32> &cache,
 }
 
 ulint Cache::GetBlockByRandom() {
-    ulint res;
-
+    ulint res(0);
     std::random_device rd;
     std::mt19937_64 generator(rd());
     std::uniform_int_distribution<int> unif(0, INT32_MAX);
 
     switch (_cache_setting.associativity) {
     case direct_mapped:
-        res = 0;
         break;
     case full_associative:
         do {

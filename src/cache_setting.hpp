@@ -24,11 +24,14 @@ enum WRITE_P {
     write_back
 };
 
+enum CACHE_TYPE { L1, L2, L3, TLB, VICTIM };
+
 struct CACHE_SET {
     MAPPING_P associativity;
     REPL_P replacement_policy;
     WRITE_P write_policy;
-    ulint type;       // type of cache: (0) main cache (1) victim cache
+    // ulint type;       // type of cache: (0) main cache (1) victim cache
+    CACHE_TYPE type;
     ulint cache_size; // cache size
     ulint block_size; // cache block size
     ulint cache_sets; // cache set
@@ -36,8 +39,8 @@ struct CACHE_SET {
     ulint num_sets;   // # of sets
     CACHE_SET()
         : associativity(direct_mapped), replacement_policy(NONE),
-          write_policy(write_back), cache_size(0), block_size(0), cache_sets(0),
-          num_block(0), num_sets(0) {}
+          write_policy(write_back), type(L1), cache_size(0), block_size(0),
+          cache_sets(0), num_block(0), num_sets(0) {}
 };
 
 #endif
