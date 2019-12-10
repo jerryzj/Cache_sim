@@ -168,7 +168,7 @@ bool Simulator::_CacheHandler(char *trace_line) {
             std::cout << "Load " << temp;
         }
 
-        if (this->main_cache->CheckIfHit(addr)) {
+        if (this->main_cache->_IsHit(addr)) {
             ++_counter.load_hit;
             ++_counter.hit_in_main;
             if (simulator_verbose_output) {
@@ -189,7 +189,8 @@ bool Simulator::_CacheHandler(char *trace_line) {
                     std::cout << ", miss";
                 }
                 this->main_cache->_Update();
-                this->victim_cache->_Insert(poten_victim);
+                if (this->main_cache->_has_evicted)
+                    this->victim_cache->_Insert(poten_victim);
             }
         } else {
             if (simulator_verbose_output) {
@@ -204,7 +205,7 @@ bool Simulator::_CacheHandler(char *trace_line) {
             std::cout << "Store " << temp;
         }
 
-        if (this->main_cache->CheckIfHit(addr)) {
+        if (this->main_cache->_IsHit(addr)) {
             ++_counter.store_hit;
             ++_counter.hit_in_main;
             if (simulator_verbose_output) {
