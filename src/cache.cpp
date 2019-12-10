@@ -244,14 +244,14 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
     _has_evicted = false;
     bool space(false);
 
-    if (_IsHit(addr)) {
+    if (_IsHit(_cur_addr)) {
         _poten_victim |= std::bitset<32>(0xffffffff);
     } else {
         switch (_cache_setting.associativity) {
         case direct_mapped:
-            _current_block = _GetCacheIndex(addr);
+            _current_block = _GetCacheIndex(_cur_addr);
             if (_cache[_current_block][30] &&
-                !_CheckIdent(_cache[_current_block], addr)) {
+                !_CheckIdent(_cache[_current_block], _cur_addr)) {
                 _has_evicted = true;
                 _poten_victim = this->_CvtToAddr(_current_block);
             }
@@ -276,7 +276,7 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
                     _current_block = static_cast<ulint>(
                         unif(generator) /
                         (INT32_MAX / _cache_setting.num_block + 1));
-                } while (_CheckIdent(_cache[_current_block], addr));
+                } while (_CheckIdent(_cache[_current_block], _cur_addr));
                 _poten_victim = this->_CvtToAddr(_current_block);
 
             } else if (_cache_setting.replacement_policy == LRU) {
@@ -284,7 +284,7 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
             }
             break;
         case set_associative:
-            _current_set = _GetCacheIndex(addr);
+            _current_set = _GetCacheIndex(_cur_addr);
 
             for (ulint i = (_current_set * _cache_setting.cache_sets);
                  i < ((_current_set + 1)) * _cache_setting.cache_sets; i++) {
@@ -308,7 +308,7 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
                         (INT32_MAX / _cache_setting.cache_sets + 1));
                     _current_block =
                         _current_set * _cache_setting.cache_sets + temp;
-                } while (_CheckIdent(_cache[_current_block], addr));
+                } while (_CheckIdent(_cache[_current_block], _cur_addr));
                 _poten_victim = this->_CvtToAddr(_current_set);
             } else if (_cache_setting.replacement_policy == LRU) {
                 // Do sth.
