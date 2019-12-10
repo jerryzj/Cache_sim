@@ -189,7 +189,8 @@ bool Simulator::_CacheHandler(char *trace_line) {
                     std::cout << ", miss";
                 }
                 this->main_cache->_Update();
-                this->victim_cache->_Insert(poten_victim);
+                if (this->main_cache->_has_evicted)
+                    this->victim_cache->_Insert(poten_victim);
             }
         } else {
             if (simulator_verbose_output) {
