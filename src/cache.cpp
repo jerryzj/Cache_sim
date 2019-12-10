@@ -166,23 +166,14 @@ void Cache::_Replace(const std::bitset<32> &addr) {
         break;
     case full_associative:
         if (_cache_setting.replacement_policy == RANDOM) {
-            std::random_device rd;
-            std::mt19937_64 generator(rd());
-            std::uniform_int_distribution<int> unif(0, INT32_MAX);
-            _current_block = static_cast<ulint>(
-                unif(generator) / (INT32_MAX / _cache_setting.num_block + 1));
+            _current_block = GetBlockByRandom();
         } else if (_cache_setting.replacement_policy == LRU) {
             // Do sth.
         }
         break;
     case set_associative:
         if (_cache_setting.replacement_policy == RANDOM) {
-            std::random_device rd;
-            std::mt19937_64 generator(rd());
-            std::uniform_int_distribution<int> unif(0, INT32_MAX);
-            ulint temp = static_cast<ulint>(
-                unif(generator) / (INT32_MAX / _cache_setting.cache_sets + 1));
-            _current_block = _current_set * _cache_setting.cache_sets + temp;
+            _current_block = GetBlockByRandom();
         } else if (_cache_setting.replacement_policy == LRU) {
             // Do sth.
         }
@@ -269,16 +260,7 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
             }
             _has_evicted = true;
             if (_cache_setting.replacement_policy == RANDOM) {
-                std::random_device rd;
-                std::mt19937_64 generator(rd());
-                std::uniform_int_distribution<int> unif(0, INT32_MAX);
-                do {
-                    _current_block = static_cast<ulint>(
-                        unif(generator) /
-                        (INT32_MAX / _cache_setting.num_block + 1));
-                } while (_CheckIdent(_cache[_current_block], _cur_addr));
-                _poten_victim = this->_CvtToAddr(_current_block);
-
+                _poten_victim = this->_CvtToAddr(GetBlockByRandom());
             } else if (_cache_setting.replacement_policy == LRU) {
                 // Do sth.
             }
@@ -299,17 +281,7 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
             }
             _has_evicted = true;
             if (_cache_setting.replacement_policy == RANDOM) {
-                std::random_device rd;
-                std::mt19937_64 generator(rd());
-                std::uniform_int_distribution<int> unif(0, INT32_MAX);
-                do {
-                    ulint temp = static_cast<ulint>(
-                        unif(generator) /
-                        (INT32_MAX / _cache_setting.cache_sets + 1));
-                    _current_block =
-                        _current_set * _cache_setting.cache_sets + temp;
-                } while (_CheckIdent(_cache[_current_block], _cur_addr));
-                _poten_victim = this->_CvtToAddr(_current_set);
+                _poten_victim = this->_CvtToAddr(GetBlockByRandom());
             } else if (_cache_setting.replacement_policy == LRU) {
                 // Do sth.
             }
@@ -361,4 +333,40 @@ bool Cache::_CheckIdent(const std::bitset<32> &cache,
         }
     }
     return true;
+}
+
+ulint Cache::GetBlockByRandom() {
+    ulint res;
+
+    std::random_device rd;
+    std::mt19937_64 generator(rd());
+    std::uniform_int_distribution<int> unif(0, INT32_MAX);
+
+    switch (_cache_setting.associativity) {
+    case direct_mapped:
+        res = 0;
+        break;
+    case full_associative:
+        do {
+            _current_block = static_cast<ulint>(
+                unif(generator) / (INT32_MAX / _cache_setting.num_block + 1));
+        } while (_CheckIdent(_cache[_current_block], _cur_addr));
+        res = _current_block;
+        break;
+
+    case set_associative:
+        do {
+            ulint temp = static_cast<ulint>(
+                unif(generator) / (INT32_MAX / _cache_setting.cache_sets + 1));
+            _current_block = _current_set * _cache_setting.cache_sets + temp;
+        } while (_CheckIdent(_cache[_current_block], _cur_addr));
+        res = _current_block;
+        break;
+    }
+
+    return res;
+}
+
+ulint Cache::GetBlockByLRU() {
+    // TODO: Your part 1 assignment
 }
