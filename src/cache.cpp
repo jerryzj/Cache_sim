@@ -369,4 +369,7 @@ ulint Cache::GetBlockByRandom() {
 
 ulint Cache::GetBlockByLRU() {
     // TODO: Your part 1 assignment
+    ulint res(0);
+
+    return res;
 }
