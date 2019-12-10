@@ -1,8 +1,10 @@
 #include "cache.hpp"
 
+extern int simulator_verbose_output;
+
 Cache::Cache(const CACHE_SET &cfg)
-    : _current_block(0), _current_set(0), _bit_block(0), _bit_line(0),
-      _bit_tag(0), _bit_set(0) {
+    : _has_evicted(false), _current_block(0), _current_set(0), _bit_block(0),
+      _bit_line(0), _bit_tag(0), _bit_set(0) {
 
     for (auto i : _cache) {
         i.reset(); // reset cache
@@ -10,13 +12,19 @@ Cache::Cache(const CACHE_SET &cfg)
     _cache_setting = cfg;
     _Cache_Setup();
 }
-
+Cache::Cache()
+    : _has_evicted(false), _current_block(0), _current_set(0), _bit_block(0),
+      _bit_line(0), _bit_tag(0), _bit_set(0) {}
 Cache::~Cache() = default;
 
 void Cache::_Cache_Setup() {
     assert(_cache_setting.block_size > 0);
-    _cache_setting.num_block =
-        (_cache_setting.cache_size << 10) / _cache_setting.block_size;
+    if (_cache_setting.type == 0)
+        _cache_setting.num_block =
+            (_cache_setting.cache_size << 10) / _cache_setting.block_size;
+    else
+        _cache_setting.num_block = _cache_setting.cache_size;
+
     auto temp = _cache_setting.block_size;
     while (temp != 0u) {
         temp >>= 1;
@@ -52,7 +60,7 @@ void Cache::_Cache_Setup() {
         --_bit_set;
         break;
     default:
-        std::cerr << "Invlid mapping policy" << std::endl;
+        std::cerr << "Invalid mapping policy" << std::endl;
         exit(-1);
     }
     _bit_tag = (32ul - _bit_block - _bit_line - _bit_set);
@@ -60,81 +68,6 @@ void Cache::_Cache_Setup() {
     for (ulint i = 0; i < _cache_setting.num_block; ++i) {
         _cache[i][31] = true;
     }
-}
-
-void Cache::dump_CACTI_config() {
-    std::ofstream out_file("cacti.cfg", std::ios::out);
-
-    // BUG: The output file doesn't work in CACTI, please fix it.
-    if (out_file.fail()) {
-        std::cerr << "Unable to generate cacti.cfg" << std::endl;
-        exit(-1);
-    }
-    out_file << "# Cache size\n";
-    out_file << "-size (bytes) 65536\n";
-    out_file << "-Array Power Gating - \"false\" \n";
-    out_file << "-WL Power Gating - \"false\"\n";
-    out_file << "-CL Power Gating - \"false\"\n";
-    out_file << "-Bitline floating - \"false\"\n";
-    out_file << "-Interconnect Power Gating - \"false\"\n";
-    out_file << "-Power Gating Performance Loss 0.01\n";
-    out_file << "-block size (bytes) " << _cache_setting.block_size
-             << std::endl;
-    switch (_cache_setting.associativity) {
-    case direct_mapped:
-        out_file << "-associativity 1\n";
-        break;
-    case set_associative:
-        out_file << "-associativity " << _cache_setting.cache_sets << std::endl;
-        break;
-    case full_associative:
-        out_file << "-associativity 0\n";
-        break;
-    default:
-        std::cerr << "Invalid associativity" << std::endl;
-        out_file.close();
-        exit(-1);
-    }
-    out_file << "-read-write port 1\n";
-    out_file << "-exclusive read port 0\n";
-    out_file << "-exclusive write port 0\n";
-    out_file << "-single ended read ports 0\n";
-    out_file << "-UCA bank count 1\n";
-    out_file << "-technology (u) 0.090\n";
-    out_file << "-Data array cell type - \"itrs-hp\"\n";
-    out_file << "-Data array peripheral type - \"itrs-hp\"\n";
-    out_file << "-Tag array cell type - \"itrs-hp\"\n";
-    out_file << "-Tag array peripheral type - \"itrs-hp\"\n";
-    out_file << "-output/input bus width 64\n";
-    out_file << "-operating temperature (K) 360\n";
-    out_file << "-cache type \"cache\"\n";
-    out_file << "-tag size (b) \"default\"\n";
-    out_file << "-access mode (normal, sequential, fast) - \"normal\"\n";
-    out_file << "-design objective (weight delay, dynamic power, leakage "
-                "power, cycle time, area) 0:0:0:100:0\n";
-    out_file << "-deviate (delay, dynamic power, leakage power, cycle time, "
-                "area) 20:100000:100000:100000:100000\n";
-    out_file << "-NUCAdesign objective (weight delay, dynamic power, leakage "
-                "power, cycle time, area) 100:100:0:0:100\n";
-    out_file << "-NUCAdeviate (delay, dynamic power, leakage power, cycle "
-                "time, area) 10:10000:10000:10000:10000\n";
-    out_file << "-Optimize ED or ED^2 (ED, ED^2, NONE): \"ED^2\"\n";
-    out_file << "-Cache model (NUCA, UCA)  - \"UCA\"\n";
-    out_file
-        << "-Wire signaling (fullswing, lowswing, default) - \"Global_30\"\n";
-    out_file << "-Wire inside mat - \"semi-global\"\n";
-    out_file << "-Wire outside mat - \"semi-global\"\n";
-    out_file << "-Interconnect projection - \"conservative\"\n";
-    out_file << "-Core count 8\n";
-    out_file << "-Cache level (L2/L3) - \"L2\"\n";
-    out_file << "-Add ECC - \"true\"\n";
-    out_file << "-Print level (DETAILED, CONCISE) - \"DETAILED\"\n";
-    out_file << "-Print input parameters - \"true\"\n";
-    out_file << "-Force cache config - \"false\"\n";
-    // out_file<< "-read-write port 1\n";
-    // out_file<< "-read-write port 1\n";
-    // out_file<< "-read-write port 1\n";
-    out_file.close();
 }
 
 bool Cache::CheckIfHit(const std::bitset<32> &addr) {
@@ -273,6 +206,44 @@ void Cache::_Drop() {
     _cache[_current_block][30] = false;
 }
 
+std::bitset<32> Cache::_CvtToAddr(const std::bitset<32> &cache_line,
+                                  const ulint block_set) {
+    std::bitset<32> addr;
+    addr.reset();
+    std::bitset<32> index(block_set);
+
+    switch (_cache_setting.associativity) {
+    case direct_mapped:
+        for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_line);
+             ++i, ++j) {
+            addr[i] = index[0];
+        }
+
+        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
+            addr[i] = cache_line[j];
+        }
+
+        break;
+    case full_associative:
+        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
+            addr[i] = cache_line[j];
+        }
+        break;
+    case set_associative:
+        for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_set);
+             ++i, ++j) {
+            addr[i] = index[j];
+        }
+
+        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
+            addr[i] = cache_line[j];
+        }
+        break;
+    }
+
+    return addr;
+}
+
 std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
     _cur_addr = addr;
     _has_evicted = false;
@@ -284,9 +255,11 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
         switch (_cache_setting.associativity) {
         case direct_mapped:
             _current_block = _GetCacheIndex(addr);
-            if (_cache[_current_block][30]) {
+            if (_cache[_current_block][30] &&
+                !_CheckIdent(_cache[_current_block], addr)) {
                 _has_evicted = true;
-                _poten_victim = this->_cache[_current_block];
+                _poten_victim =
+                    this->_CvtToAddr(_cache[_current_block], _current_block);
             }
             break;
         case full_associative:
@@ -310,7 +283,8 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
                         unif(generator) /
                         (INT32_MAX / _cache_setting.num_block + 1));
                 } while (_CheckIdent(_cache[_current_block], addr));
-                _poten_victim = _cache[_current_block];
+                _poten_victim =
+                    this->_CvtToAddr(_cache[_current_block], _current_block);
 
             } else if (_cache_setting.replacement_policy == LRU) {
                 // Do sth.
@@ -342,8 +316,8 @@ std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
                     _current_block =
                         _current_set * _cache_setting.cache_sets + temp;
                 } while (_CheckIdent(_cache[_current_block], addr));
-                _poten_victim = _cache[_current_block];
-
+                _poten_victim =
+                    this->_CvtToAddr(_cache[_current_block], _current_set);
             } else if (_cache_setting.replacement_policy == LRU) {
                 // Do sth.
             }

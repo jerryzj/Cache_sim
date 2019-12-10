@@ -16,9 +16,9 @@ class Cache {
   public:
     // explicit Cache(const char *config_filename);
     explicit Cache(const CACHE_SET &cfg);
+    explicit Cache();
     ~Cache();
     bool CheckIfHit(const std::bitset<32> &addr);
-    void dump_CACTI_config(); // Generate CACTI configuration file
     friend class Simulator;
 
   protected:
@@ -28,6 +28,8 @@ class Cache {
     void _Read(const std::bitset<32> &addr);    // Read data from memory
     void _Drop();                               // Write data to memory
     void _Replace(const std::bitset<32> &addr); // Replace cache block
+    std::bitset<32> _CvtToAddr(const std::bitset<32> &cache_line,
+                               ulint block_set);
     std::bitset<32> _Evicted(const std::bitset<32> &addr);
     // Utility functions
     void _Cache_Setup(); // Setup cache
