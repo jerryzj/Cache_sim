@@ -19,8 +19,12 @@ Cache::~Cache() = default;
 
 void Cache::_Cache_Setup() {
     assert(_cache_setting.block_size > 0);
-    _cache_setting.num_block =
-        (_cache_setting.cache_size << 10) / _cache_setting.block_size;
+    if (_cache_setting.type == 0)
+        _cache_setting.num_block =
+            (_cache_setting.cache_size << 10) / _cache_setting.block_size;
+    else
+        _cache_setting.num_block = _cache_setting.cache_size;
+
     auto temp = _cache_setting.block_size;
     while (temp != 0u) {
         temp >>= 1;

@@ -20,6 +20,7 @@ void Simulator::ReadConfig() {
     }
 
     CACHE_SET _cache_conf;
+    _cache_conf.type = 0; // main cache
     bool is_directedmap_flag(false);
     std::list<std::string> config_raw, config_ready;
 
@@ -93,6 +94,7 @@ void Simulator::ReadConfig() {
     }
     config_ready.pop_front();
     this->_has_victim = true;
+    _cache_conf.type = 1;
     _cache_conf.cache_size = stoi(config_ready.front());
     _cache_conf.associativity = full_associative;
     this->_victim_setting = _cache_conf;
@@ -291,9 +293,12 @@ void Simulator::DumpResult() {
 }
 
 void Simulator::_ShowSettingInfo(const CACHE_SET &_cache_setting) {
-
-    std::cout << "Cache size: " << _cache_setting.cache_size << "KB"
-              << std::endl;
+    if (_cache_setting.type == 1)
+        std::cout << "Cache size: " << _cache_setting.cache_size << " blocks"
+                  << std::endl;
+    else
+        std::cout << "Cache size: " << _cache_setting.cache_size << "KB"
+                  << std::endl;
     std::cout << "Cache block size: " << _cache_setting.block_size << "B"
               << std::endl;
     switch (_cache_setting.associativity) {
