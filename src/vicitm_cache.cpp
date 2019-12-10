@@ -9,6 +9,7 @@ VictimCache::VictimCache(const CACHE_SET &cache_setting) : Cache() {
     _cache_setting = cache_setting;
     this->_Cache_Setup();
 }
+
 VictimCache::~VictimCache() = default;
 
 bool VictimCache::_IsHit(const std::bitset<32> &addr,

@@ -38,8 +38,6 @@ class Simulator {
     void ReadConfig();
 
   private:
-    // Cache *main_cache;
-    // VictimCache *victim_cache;
     std::unique_ptr<Cache> main_cache;
     std::unique_ptr<VictimCache> victim_cache;
     const std::string &cache_cfg_file;
