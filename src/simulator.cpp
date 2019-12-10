@@ -338,7 +338,7 @@ void Simulator::_ShowSettingInfo(const CACHE_SET &_cache_setting) {
     }
 }
 
-void Simulator::_DumpCACTIConfig(const std::string filename,
+void Simulator::_DumpCACTIConfig(const std::string &filename,
                                  const CACHE_SET &_cache_setting) {
     std::ofstream out_file(filename, std::ios::out);
 

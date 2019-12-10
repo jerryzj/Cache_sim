@@ -56,7 +56,7 @@ class Simulator {
     void _Read(const std::bitset<32> &addr);    // Read data from memory
     void _Drop();                               // Write data to memory
     void _Replace(const std::bitset<32> &addr); // Replace cache block
-    void _DumpCACTIConfig(const std::string, const CACHE_SET &);
+    void _DumpCACTIConfig(const std::string &, const CACHE_SET &);
     void _ShowSettingInfo(const CACHE_SET &setting);
 };
 
