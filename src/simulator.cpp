@@ -6,7 +6,10 @@ Simulator::Simulator(const std::string &cache_cfg,
                      const std::string &program_trace)
     : cache_cfg_file(cache_cfg), trace_file(program_trace), _has_victim(false) {
     ReadConfig();
-    CacheSetup();
+    main_cache = std::make_unique<Cache>(this->_cache_setting);
+    if (_has_victim) {
+        victim_cache = std::make_unique<VictimCache>(this->_victim_setting);
+    }
 }
 
 Simulator::~Simulator() = default;
@@ -104,13 +107,6 @@ void Simulator::ReadConfig() {
     }
 
     return;
-}
-
-void Simulator::CacheSetup() {
-    this->main_cache = new Cache(this->_cache_setting);
-    if (_has_victim) {
-        this->victim_cache = new VictimCache(this->_victim_setting);
-    }
 }
 
 void Simulator::RunSimulation() {

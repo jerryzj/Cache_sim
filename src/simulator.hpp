@@ -5,6 +5,7 @@
 #include "config_parser.hpp"
 #include "victim_cache.hpp"
 #include <cstdint>
+#include <memory>
 
 struct COUNTER {
     uint64_t access;    // # of cache access
@@ -35,11 +36,12 @@ class Simulator {
     void DumpCACTIConfig(); // Generate CACTI configuration file
     void ParseCacheConfig();
     void ReadConfig();
-    void CacheSetup();
 
   private:
-    Cache *main_cache;
-    VictimCache *victim_cache;
+    // Cache *main_cache;
+    // VictimCache *victim_cache;
+    std::unique_ptr<Cache> main_cache;
+    std::unique_ptr<VictimCache> victim_cache;
     const std::string &cache_cfg_file;
     const std::string &trace_file;
     bool _has_victim;
