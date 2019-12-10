@@ -14,7 +14,6 @@ using uint = unsigned int;
 
 class Cache {
   public:
-    // explicit Cache(const char *config_filename);
     explicit Cache(const CACHE_SET &cfg);
     explicit Cache();
     ~Cache();
@@ -33,8 +32,6 @@ class Cache {
     std::bitset<32> _Evicted(const std::bitset<32> &addr);
 
     // Utility functions
-
-    // Setup cache
     void _Cache_Setup();
     void
     _WriteToBlock(const std::bitset<32> &addr); // Write data to cache block
@@ -45,7 +42,7 @@ class Cache {
     // Replacement policy related
     ulint GetBlockByRandom();
     ulint GetBlockByLRU();
-    
+
     // Return a memory address by given line/block
     std::bitset<32> _CvtToAddr(ulint block_set);
     void _Update();
