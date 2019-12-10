@@ -339,7 +339,7 @@ void Cache::_Update() {
 void Cache::_WriteToBlock(const std::bitset<32> &addr) {
     for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
         _cache[_current_block][j] = addr[i];
-        assert(j > 0);
+        assert(j >= 0);
     }
     _cache[_current_block][30] = true;
 }
