@@ -19,7 +19,6 @@ class Cache {
     explicit Cache();
     ~Cache();
     bool CheckIfHit(const std::bitset<32> &addr);
-    void dump_CACTI_config(); // Generate CACTI configuration file
     friend class Simulator;
 
   protected:
