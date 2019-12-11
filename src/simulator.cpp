@@ -143,7 +143,10 @@ bool Simulator::_CacheHandler(char *trace_line) {
     auto temp = strtoul(trace_line + 2, nullptr, 16);
     std::bitset<32> addr(temp);
 
-    std::bitset<32> poten_victim = this->main_cache->_Evicted(addr);
+    // *Predict* the address that may be evicted from main cache
+    std::bitset<32> poten_victim_addr = this->main_cache->_Evicted(addr);
+
+    // Handle the address
     if (is_load) {
         ++_counter.access;
         ++_counter.load;
@@ -154,14 +157,14 @@ bool Simulator::_CacheHandler(char *trace_line) {
         } else if (this->_has_victim) {
             assert(this->victim_cache != nullptr);
             if (this->main_cache->_has_evicted &&
-                this->victim_cache->_IsHit(addr, poten_victim)) {
+                this->victim_cache->_IsHit(addr, poten_victim_addr)) {
                 ++_counter.load_hit;
                 ++_counter.hit_in_victim;
                 this->main_cache->_Update();
             } else {
                 this->main_cache->_Update();
                 if (this->main_cache->_has_evicted)
-                    this->victim_cache->_Insert(poten_victim);
+                    this->victim_cache->_Insert(poten_victim_addr);
             }
         } else {
             this->main_cache->_Read(addr);
@@ -176,13 +179,13 @@ bool Simulator::_CacheHandler(char *trace_line) {
 
         } else if (this->_has_victim) {
             assert(this->victim_cache != nullptr);
-            if (this->victim_cache->_IsHit(addr, poten_victim)) {
+            if (this->victim_cache->_IsHit(addr, poten_victim_addr)) {
                 ++_counter.store_hit;
                 ++_counter.hit_in_victim;
                 this->main_cache->_Update();
             } else {
                 this->main_cache->_Update();
-                this->victim_cache->_Insert(poten_victim);
+                this->victim_cache->_Insert(poten_victim_addr);
             }
         } else {
             this->main_cache->_Read(addr);

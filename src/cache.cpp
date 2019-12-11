@@ -201,32 +201,32 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
     addr.reset();
     std::bitset<32> index(block_set);
 
+    auto a_tag = [_c = this](std::bitset<32> &dst_addr, const ulint block_set) {
+        for (uint i = 31, j = 28; i > (31ul - _c->_bit_tag); --i, --j) {
+            dst_addr[i] = _c->_cache[block_set][j];
+        }
+    };
+
     switch (_cache_setting.associativity) {
     case direct_mapped:
         for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_line);
              ++i, ++j) {
             addr[i] = index[j];
         }
-        // TODO: Use lambda function replace
-        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
-            addr[i] = _cache[block_set][j];
-        }
+        a_tag(addr, block_set);
 
         break;
     case full_associative:
-        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
-            addr[i] = _cache[block_set][j];
-        }
+        a_tag(addr, block_set);
+
         break;
     case set_associative:
         for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_set);
              ++i, ++j) {
             addr[i] = index[j];
         }
+        a_tag(addr, block_set);
 
-        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
-            addr[i] = _cache[block_set][j];
-        }
         break;
     }
 
@@ -236,57 +236,26 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
 std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
     _cur_addr = addr;
     _has_evicted = false;
-    bool space(false);
 
     if (_IsHit(_cur_addr)) {
         _poten_victim |= std::bitset<32>(0xffffffff);
     } else {
         switch (_cache_setting.associativity) {
         case direct_mapped:
-            _current_block = _GetCacheIndex(_cur_addr);
-            if (_cache[_current_block][30] &&
-                !_CheckIdent(_cache[_current_block], _cur_addr)) {
+            if (!_IfBlockAvailable()) {
                 _has_evicted = true;
                 _poten_victim = this->_CvtToAddr(_current_block);
             }
             break;
         case full_associative:
-            for (uint i = 0; i < _cache_setting.num_block; ++i) {
-                if (!_cache[i][30]) {
-                    space = true;
-                    _poten_victim |= std::bitset<32>(0xffffffff);
-                    break;
-                }
-            }
-            if (space) {
-                break;
-            }
-            _has_evicted = true;
-            if (_cache_setting.replacement_policy == RANDOM) {
-                _poten_victim = this->_CvtToAddr(GetBlockByRandom());
-            } else if (_cache_setting.replacement_policy == LRU) {
-                // Do sth.
-            }
-            break;
         case set_associative:
-            _current_set = _GetCacheIndex(_cur_addr);
-
-            for (ulint i = (_current_set * _cache_setting.cache_sets);
-                 i < ((_current_set + 1)) * _cache_setting.cache_sets; i++) {
-                if (!_cache[i][30]) {
-                    space = true;
-                    _poten_victim |= std::bitset<32>(0xffffffff);
-                    break;
+            if (!_IfBlockAvailable()) {
+                _has_evicted = true;
+                if (_cache_setting.replacement_policy == RANDOM) {
+                    _poten_victim = this->_CvtToAddr(GetBlockByRandom());
+                } else if (_cache_setting.replacement_policy == LRU) {
+                    // Do sth.
                 }
-            }
-            if (space) {
-                break;
-            }
-            _has_evicted = true;
-            if (_cache_setting.replacement_policy == RANDOM) {
-                _poten_victim = this->_CvtToAddr(GetBlockByRandom());
-            } else if (_cache_setting.replacement_policy == LRU) {
-                // Do sth.
             }
             break;
         }
@@ -373,4 +342,31 @@ ulint Cache::GetBlockByLRU() {
     ulint res(0);
 
     return res;
+}
+
+bool Cache::_IfBlockAvailable() {
+    switch (_cache_setting.associativity) {
+    case direct_mapped:
+        if (!_cache[_current_block][30])
+            return true;
+        break;
+    case full_associative:
+        for (uint i = 0; i < _cache_setting.num_block; ++i) {
+            if (!_cache[i][30]) {
+                return true;
+            }
+        }
+        break;
+    case set_associative:
+        _current_set = _GetCacheIndex(_cur_addr);
+        for (ulint i = (_current_set * _cache_setting.cache_sets);
+             i < ((_current_set + 1)) * _cache_setting.cache_sets; i++) {
+            if (!_cache[i][30]) {
+                return true;
+            }
+        }
+        break;
+    }
+
+    return false;
 }

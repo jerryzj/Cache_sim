@@ -35,8 +35,11 @@ class Cache {
     void
     _WriteToBlock(const std::bitset<32> &addr); // Write data to cache block
     ulint _GetCacheIndex(const std::bitset<32> &addr); // Get index of block
+    bool _IfBlockAvailable();
+
     // Check whether current address is in certain cache block
     bool _CheckIdent(const std::bitset<32> &cache, const std::bitset<32> &addr);
+
     // Replacement policy related
     ulint GetBlockByRandom();
     ulint GetBlockByLRU();
