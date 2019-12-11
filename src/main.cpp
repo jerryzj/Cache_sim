@@ -1,13 +1,10 @@
 #include "argparse.hpp"
 #include "simulator.hpp"
 
-int simulator_verbose_output = 0;
-
 int main(int argc, char **argv) {
     ArgumentParser parser("Argument parser");
     parser.add_argument("-t", "Program trace file", true);
     parser.add_argument("-c", "Cache config file", true);
-    parser.add_argument("-v", "--verbose", "Verbose output", false);
 
     try {
         parser.parse(argc, argv);
@@ -19,10 +16,6 @@ int main(int argc, char **argv) {
 
     if (parser.is_help()) {
         return 0;
-    }
-
-    if (parser.exists("v")) {
-        simulator_verbose_output = parser.get<int>("v");
     }
 
     std::string config_path = parser.get<std::string>("c");
