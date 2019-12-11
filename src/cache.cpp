@@ -171,14 +171,14 @@ void Cache::_Replace(const std::bitset<32> &addr) {
         if (_cache_setting.replacement_policy == RANDOM) {
             _current_block = GetBlockByRandom();
         } else if (_cache_setting.replacement_policy == LRU) {
-            // Do sth.
+            _current_block = GetBlockByLRU();
         }
         break;
     case set_associative:
         if (_cache_setting.replacement_policy == RANDOM) {
             _current_block = GetBlockByRandom();
         } else if (_cache_setting.replacement_policy == LRU) {
-            // Do sth.
+            _current_block = GetBlockByLRU();
         }
         break;
     }
@@ -207,7 +207,7 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
              ++i, ++j) {
             addr[i] = index[j];
         }
-
+        // TODO: Use lambda function replace
         for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
             addr[i] = _cache[block_set][j];
         }
