@@ -18,6 +18,8 @@ class Cache {
     explicit Cache();
     ~Cache();
 
+    bool IsHit();
+
     friend class Simulator;
 
   protected:
@@ -28,7 +30,7 @@ class Cache {
     void _Drop();                               // Write data to memory
     void _Replace(const std::bitset<32> &addr); // Replace cache block
     // Predict and return potential evicted cache address in current instruction
-    std::bitset<32> _Evicted(const std::bitset<32> &addr);
+    std::bitset<32> Ready(const std::bitset<32> &addr);
 
     // Utility functions
     void _Cache_Setup();
@@ -46,21 +48,26 @@ class Cache {
     // Return a memory address by given line/block
     std::bitset<32> _CvtToAddr(ulint block_set);
     void _Update();
-
+    void _LRUHitHandle();
     // Variables
-    CACHE_SET _cache_setting;         // Basic configurations
     std::bitset<32> _cache[MAX_LINE]; // Cache status
-    std::bitset<32> _poten_victim;
-    std::bitset<32> _cur_addr;
-    bool _has_evicted;
     // [31]: valid bit [30]: hit [29]: dirty bit [28]~[0]: data
     std::vector<uint> _LRU_priority; // Priority table for LRU
-    ulint _current_block;            // The block being processed
-    ulint _current_set;              // The set being processed
-    uint _bit_block;                 // # of bits of a block
-    uint _bit_line;                  // # of bits of a line
-    uint _bit_tag;                   // # of bits of a tag
-    uint _bit_set;                   // # of bits of a set
+
+    // Flags
+    ulint _current_block; // The block being processed
+    ulint _current_set;   // The set being processed
+    std::bitset<32> _current_addr;
+    std::bitset<32> _poten_victim;
+    bool _has_evicted;
+    bool _has_space;
+    bool _has_hit;
+    // Cache parameters
+    CACHE_SET _cache_setting; // Basic configurations
+    uint _bit_block;          // # of bits of a block
+    uint _bit_line;           // # of bits of a line
+    uint _bit_tag;            // # of bits of a tag
+    uint _bit_set;            // # of bits of a set
 };
 
 #endif

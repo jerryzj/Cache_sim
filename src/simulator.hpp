@@ -7,6 +7,9 @@
 #include <cstdint>
 #include <memory>
 
+const int LENGTH_OF_INST_LINE = 13;
+const int INST_ADDR_BASE = 16;
+
 struct COUNTER {
     uint64_t access;    // # of cache access
     uint64_t load;      // # of load inst.

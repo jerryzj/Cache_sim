@@ -107,7 +107,7 @@ void Simulator::RunSimulation() {
 
     while (!in_file.eof()) {
         try {
-            in_file.getline(trace_line, 13);
+            in_file.getline(trace_line, LENGTH_OF_INST_LINE);
             bool is_success = _CacheHandler(trace_line);
             if (!is_success) {
                 throw std::logic_error("Cache Handler failed");
@@ -124,7 +124,7 @@ void Simulator::RunSimulation() {
 
 bool Simulator::_CacheHandler(char *trace_line) {
     bool is_load(false), is_store(false), is_space(false);
-
+    // Determine what kind of the instruction
     switch (trace_line[0]) {
     case 'l':
         is_load = true;
@@ -140,18 +140,20 @@ bool Simulator::_CacheHandler(char *trace_line) {
         std::cerr << "Error line: " << trace_line << std::endl;
         return false;
     }
-    auto temp = strtoul(trace_line + 2, nullptr, 16);
+
+    // Parse the address from the instruction
+    auto temp = strtoul(trace_line + 2, nullptr, INST_ADDR_BASE);
     std::bitset<32> addr(temp);
 
-    // *Predict* the address that may be evicted from main cache
-    std::bitset<32> poten_victim_addr = this->main_cache->_Evicted(addr);
+    // Preprocess the following memory address
+    std::bitset<32> poten_victim_addr = this->main_cache->Ready(addr);
 
     // Handle the address
     if (is_load) {
         ++_counter.access;
         ++_counter.load;
 
-        if (this->main_cache->_IsHit(addr)) {
+        if (this->main_cache->IsHit()) {
             ++_counter.load_hit;
             ++_counter.hit_in_main;
         } else if (this->_has_victim) {
