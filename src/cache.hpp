@@ -30,7 +30,7 @@ class Cache {
     void _Drop();                               // Write data to memory
     void _Replace(const std::bitset<32> &addr); // Replace cache block
     // Predict and return potential evicted cache address in current instruction
-    std::bitset<32> Ready(const std::bitset<32> &addr);
+    void Ready(const std::bitset<32> &addr);
 
     // Utility functions
     void _Cache_Setup();

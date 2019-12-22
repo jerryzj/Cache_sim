@@ -5,9 +5,6 @@ Simulator::Simulator(const std::string &cache_cfg,
     : cache_cfg_file(cache_cfg), trace_file(program_trace), _has_victim(false) {
     ReadConfig();
     main_cache = std::make_unique<Cache>(this->_cache_setting);
-    if (_has_victim) {
-        victim_cache = std::make_unique<VictimCache>(this->_victim_setting);
-    }
     inst_loader = std::make_unique<InstructionLoader>(trace_file);
 }
 
@@ -82,18 +79,6 @@ void Simulator::ReadConfig() {
     }
     this->_cache_setting = _cache_conf;
 
-    while (!config_ready.empty() && config_ready.front() != "---")
-        config_ready.pop_front();
-    if (config_ready.empty()) {
-        return;
-    }
-    config_ready.pop_front();
-    this->_has_victim = true;
-    _cache_conf.type = VICTIM;
-    _cache_conf.cache_size = stoi(config_ready.front());
-    _cache_conf.associativity = full_associative;
-    this->_victim_setting = _cache_conf;
-
     return;
 }
 
@@ -129,77 +114,29 @@ bool Simulator::_CacheHandler(inst_t inst) {
 
     addr_t addr_b = Cvt2AddrBits(inst.addr_raw);
 
-    std::bitset<32> poten_victim_addr = this->main_cache->Ready(addr_b);
+    this->main_cache->Ready(addr_b);
 
     // Handle the address
     if (is_load) {
         ++_counter.access;
         ++_counter.load;
-<<<<<<< HEAD
-=======
-        if (simulator_verbose_output) {
-            std::cout << "Load " << inst.addr_raw;
-        }
->>>>>>> 8eebb25... Refactor instruction loading
 
         if (this->main_cache->IsHit()) {
             ++_counter.load_hit;
             ++_counter.hit_in_main;
-        } else if (this->_has_victim) {
-            assert(this->victim_cache != nullptr);
-            if (this->main_cache->_has_evicted &&
-                this->victim_cache->_IsHit(addr_b, poten_victim_addr)) {
-                ++_counter.load_hit;
-                ++_counter.hit_in_victim;
-                this->main_cache->_Update();
-            } else {
-                this->main_cache->_Update();
-                if (this->main_cache->_has_evicted)
-                    this->victim_cache->_Insert(poten_victim_addr);
-            }
         } else {
-<<<<<<< HEAD
-            this->main_cache->_Read(addr);
-=======
-            if (simulator_verbose_output) {
-                std::cout << ", miss";
-            }
             this->main_cache->_Read(addr_b);
->>>>>>> 8eebb25... Refactor instruction loading
         }
     } else if (is_store) {
         ++_counter.access;
         ++_counter.store;
-<<<<<<< HEAD
-=======
-        if (simulator_verbose_output) {
-            std::cout << "Store " << inst.addr_raw;
-        }
->>>>>>> 8eebb25... Refactor instruction loading
 
         if (this->main_cache->_IsHit(addr_b)) {
             ++_counter.store_hit;
             ++_counter.hit_in_main;
 
-        } else if (this->_has_victim) {
-            assert(this->victim_cache != nullptr);
-            if (this->victim_cache->_IsHit(addr_b, poten_victim_addr)) {
-                ++_counter.store_hit;
-                ++_counter.hit_in_victim;
-                this->main_cache->_Update();
-            } else {
-                this->main_cache->_Update();
-                this->victim_cache->_Insert(poten_victim_addr);
-            }
         } else {
-<<<<<<< HEAD
-            this->main_cache->_Read(addr);
-=======
-            if (simulator_verbose_output) {
-                std::cout << ", miss";
-            }
             this->main_cache->_Read(addr_b);
->>>>>>> 8eebb25... Refactor instruction loading
         }
     } else if (is_space) {
         ++_counter.space;
@@ -235,25 +172,13 @@ void Simulator::DumpResult() {
     std::cout << "│  Main Cache    │" << std::endl;
     std::cout << "└----------------┘" << std::endl;
     _ShowSettingInfo(this->_cache_setting);
-    if (this->_has_victim) {
-        std::cout << "-----------------------------------" << std::endl;
-        std::cout << "┌----------------┐" << std::endl;
-        std::cout << "│  Victim Cache  │" << std::endl;
-        std::cout << "└----------------┘" << std::endl;
-        _ShowSettingInfo(this->_victim_setting);
-    }
+
     std::cout << "===================================" << std::endl;
 
     std::cout << "Number of cache access: " << _counter.access << std::endl;
     std::cout << "Number of cache load: " << _counter.load << std::endl;
     std::cout << "Number of cache store: " << _counter.store << std::endl;
     std::cout << "Number of total cache hit: " << _counter.hit << std::endl;
-    if (this->_has_victim) {
-        std::cout << " - Number of hit in main cache: " << _counter.hit_in_main
-                  << std::endl;
-        std::cout << " - Number of hit in victim cache: "
-                  << _counter.hit_in_victim << std::endl;
-    }
 
     std::cout << "Cache hit rate: " << std::setprecision(6)
               << _counter.avg_hit_rate << std::endl;

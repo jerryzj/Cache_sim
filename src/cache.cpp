@@ -250,13 +250,11 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
     return addr;
 }
 
-std::bitset<32> Cache::Ready(const std::bitset<32> &addr) {
+void Cache::Ready(const std::bitset<32> &addr) {
     _current_addr = addr;
     _current_block = 0;
     _current_set = 0;
     _has_space = false;
-    _has_evicted = false;
-    _poten_victim.reset();
 
     _has_hit = _IsHit(_current_addr);
 
@@ -265,7 +263,6 @@ std::bitset<32> Cache::Ready(const std::bitset<32> &addr) {
         case direct_mapped:
             if (!_IfBlockAvailable()) {
                 _has_evicted = true;
-                _poten_victim = this->_CvtToAddr(_current_block);
             }
             break;
         case full_associative:
@@ -273,16 +270,16 @@ std::bitset<32> Cache::Ready(const std::bitset<32> &addr) {
             if (!_IfBlockAvailable()) {
                 _has_evicted = true;
                 if (_cache_setting.replacement_policy == RANDOM) {
-                    _poten_victim = this->_CvtToAddr(GetBlockByRandom());
+                    int _ = GetBlockByRandom();
+                    _++;
                 } else if (_cache_setting.replacement_policy == LRU) {
-                    _poten_victim = this->_CvtToAddr(GetBlockByLRU());
+                    int _ = GetBlockByLRU();
+                    _++;
                 }
             }
             break;
         }
     }
-
-    return _poten_victim;
 }
 
 void Cache::_Update() {

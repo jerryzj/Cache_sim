@@ -41,7 +41,6 @@ class Simulator {
   private:
     std::unique_ptr<InstructionLoader> inst_loader;
     std::unique_ptr<Cache> main_cache;
-    std::unique_ptr<VictimCache> victim_cache;
     const std::string &cache_cfg_file;
     const std::string &trace_file;
     bool _has_victim;
