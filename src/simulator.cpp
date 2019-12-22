@@ -8,6 +8,7 @@ Simulator::Simulator(const std::string &cache_cfg,
     if (_has_victim) {
         victim_cache = std::make_unique<VictimCache>(this->_victim_setting);
     }
+    inst_loader = std::make_unique<InstructionLoader>(trace_file);
 }
 
 Simulator::~Simulator() = default;
@@ -97,61 +98,49 @@ void Simulator::ReadConfig() {
 }
 
 void Simulator::RunSimulation() {
-    std::ifstream in_file((this->trace_file).c_str(), std::ios::in);
-    char trace_line[13];
-
-    if (in_file.fail()) {
-        std::cerr << "Open trace file error" << std::endl;
-        exit(-1);
-    }
-
-    while (!in_file.eof()) {
+    while (inst_loader->IfAvailable()) {
         try {
-            in_file.getline(trace_line, LENGTH_OF_INST_LINE);
-            bool is_success = _CacheHandler(trace_line);
+            bool is_success = _CacheHandler(inst_loader->GetNextInst());
             if (!is_success) {
                 throw std::logic_error("Cache Handler failed");
             }
         } catch (std::exception &ex) {
-            in_file.close();
             std::cerr << ex.what() << std::endl;
             exit(-1);
         }
     }
-    in_file.close();
     _CalHitRate();
 }
 
-bool Simulator::_CacheHandler(char *trace_line) {
+bool Simulator::_CacheHandler(inst_t inst) {
     bool is_load(false), is_store(false), is_space(false);
     // Determine what kind of the instruction
-    switch (trace_line[0]) {
-    case 'l':
+    switch (inst.op) {
+    case I_LOAD:
         is_load = true;
         break;
-    case 's':
+    case I_STORE:
         is_store = true;
         break;
-    case '\0':
+    case I_NONE:
         is_space = true;
         break;
-    default:
-        std::cerr << "Undefined instruction type." << std::endl;
-        std::cerr << "Error line: " << trace_line << std::endl;
-        return false;
     }
 
-    // Parse the address from the instruction
-    auto temp = strtoul(trace_line + 2, nullptr, INST_ADDR_BASE);
-    std::bitset<32> addr(temp);
+    addr_t addr_b = Cvt2AddrBits(inst.addr_raw);
 
-    // Preprocess the following memory address
-    std::bitset<32> poten_victim_addr = this->main_cache->Ready(addr);
+    std::bitset<32> poten_victim_addr = this->main_cache->Ready(addr_b);
 
     // Handle the address
     if (is_load) {
         ++_counter.access;
         ++_counter.load;
+<<<<<<< HEAD
+=======
+        if (simulator_verbose_output) {
+            std::cout << "Load " << inst.addr_raw;
+        }
+>>>>>>> 8eebb25... Refactor instruction loading
 
         if (this->main_cache->IsHit()) {
             ++_counter.load_hit;
@@ -159,7 +148,7 @@ bool Simulator::_CacheHandler(char *trace_line) {
         } else if (this->_has_victim) {
             assert(this->victim_cache != nullptr);
             if (this->main_cache->_has_evicted &&
-                this->victim_cache->_IsHit(addr, poten_victim_addr)) {
+                this->victim_cache->_IsHit(addr_b, poten_victim_addr)) {
                 ++_counter.load_hit;
                 ++_counter.hit_in_victim;
                 this->main_cache->_Update();
@@ -169,19 +158,32 @@ bool Simulator::_CacheHandler(char *trace_line) {
                     this->victim_cache->_Insert(poten_victim_addr);
             }
         } else {
+<<<<<<< HEAD
             this->main_cache->_Read(addr);
+=======
+            if (simulator_verbose_output) {
+                std::cout << ", miss";
+            }
+            this->main_cache->_Read(addr_b);
+>>>>>>> 8eebb25... Refactor instruction loading
         }
     } else if (is_store) {
         ++_counter.access;
         ++_counter.store;
+<<<<<<< HEAD
+=======
+        if (simulator_verbose_output) {
+            std::cout << "Store " << inst.addr_raw;
+        }
+>>>>>>> 8eebb25... Refactor instruction loading
 
-        if (this->main_cache->_IsHit(addr)) {
+        if (this->main_cache->_IsHit(addr_b)) {
             ++_counter.store_hit;
             ++_counter.hit_in_main;
 
         } else if (this->_has_victim) {
             assert(this->victim_cache != nullptr);
-            if (this->victim_cache->_IsHit(addr, poten_victim_addr)) {
+            if (this->victim_cache->_IsHit(addr_b, poten_victim_addr)) {
                 ++_counter.store_hit;
                 ++_counter.hit_in_victim;
                 this->main_cache->_Update();
@@ -190,13 +192,20 @@ bool Simulator::_CacheHandler(char *trace_line) {
                 this->victim_cache->_Insert(poten_victim_addr);
             }
         } else {
+<<<<<<< HEAD
             this->main_cache->_Read(addr);
+=======
+            if (simulator_verbose_output) {
+                std::cout << ", miss";
+            }
+            this->main_cache->_Read(addr_b);
+>>>>>>> 8eebb25... Refactor instruction loading
         }
     } else if (is_space) {
         ++_counter.space;
     } else {
         std::cerr << "Unexpected error in _CacheHandler()" << std::endl;
-        std::cerr << "ERROR line: " << trace_line << std::endl;
+        std::cerr << "ERROR line: " << inst.addr_raw << std::endl;
         return false;
     }
 

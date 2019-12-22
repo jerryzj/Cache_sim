@@ -30,7 +30,6 @@ struct CACHE_SET {
     MAPPING_P associativity;
     REPL_P replacement_policy;
     WRITE_P write_policy;
-    // ulint type;       // type of cache: (0) main cache (1) victim cache
     CACHE_TYPE type;
     ulint cache_size; // cache size
     ulint block_size; // cache block size

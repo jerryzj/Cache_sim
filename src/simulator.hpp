@@ -3,12 +3,10 @@
 
 #include "cache.hpp"
 #include "config_parser.hpp"
+#include "loader.hpp"
 #include "victim_cache.hpp"
 #include <cstdint>
 #include <memory>
-
-const int LENGTH_OF_INST_LINE = 13;
-const int INST_ADDR_BASE = 16;
 
 struct COUNTER {
     uint64_t access;    // # of cache access
@@ -41,6 +39,7 @@ class Simulator {
     void ReadConfig();
 
   private:
+    std::unique_ptr<InstructionLoader> inst_loader;
     std::unique_ptr<Cache> main_cache;
     std::unique_ptr<VictimCache> victim_cache;
     const std::string &cache_cfg_file;
@@ -50,7 +49,7 @@ class Simulator {
     CACHE_SET _victim_setting;
     COUNTER _counter; // Runtime statistics
 
-    bool _CacheHandler(char *trace_line); // Main Instruction processing
+    bool _CacheHandler(inst_t inst); // Main Instruction processing
     uint64_t _GetCacheIndex(const std::bitset<32> &addr); // Get index of block
     bool _CheckIdent(const std::bitset<32> &cache, const std::bitset<32> &addr);
     // Check whether current address is in certain cache block
