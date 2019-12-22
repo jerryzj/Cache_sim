@@ -112,9 +112,9 @@ bool Simulator::_CacheHandler(inst_t inst) {
         break;
     }
 
-    addr_t addr_b = Cvt2AddrBits(inst.addr_raw);
+    addr_t next_addr = Cvt2AddrBits(inst.addr_raw);
 
-    this->main_cache->Ready(addr_b);
+    this->main_cache->Ready(next_addr);
 
     // Handle the address
     if (is_load) {
@@ -125,18 +125,18 @@ bool Simulator::_CacheHandler(inst_t inst) {
             ++_counter.load_hit;
             ++_counter.hit_in_main;
         } else {
-            this->main_cache->_Read(addr_b);
+            this->main_cache->_Read(next_addr);
         }
     } else if (is_store) {
         ++_counter.access;
         ++_counter.store;
 
-        if (this->main_cache->_IsHit(addr_b)) {
+        if (this->main_cache->_IsHit(next_addr)) {
             ++_counter.store_hit;
             ++_counter.hit_in_main;
 
         } else {
-            this->main_cache->_Read(addr_b);
+            this->main_cache->_Read(next_addr);
         }
     } else if (is_space) {
         ++_counter.space;

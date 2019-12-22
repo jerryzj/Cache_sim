@@ -2,12 +2,10 @@
 #define _LOADER_HPP_
 
 #include "datatype.hpp"
-#include <fstream>
-#include <iostream>
-
+#include <memory>
 class InstructionLoader {
   public:
-    InstructionLoader(const std::string &filename);
+    explicit InstructionLoader(const std::string &filename);
     InstructionLoader() {}
     ~InstructionLoader();
     void LoadTraceFile(const std::string &filename);

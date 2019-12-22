@@ -186,16 +186,16 @@ void Cache::_Replace(const std::bitset<32> &addr) {
         break;
     case full_associative:
         if (_cache_setting.replacement_policy == RANDOM) {
-            _current_block = GetBlockByRandom();
+            GetBlockByRandom();
         } else if (_cache_setting.replacement_policy == LRU) {
-            _current_block = GetBlockByLRU();
+            GetBlockByLRU();
         }
         break;
     case set_associative:
         if (_cache_setting.replacement_policy == RANDOM) {
-            _current_block = GetBlockByRandom();
+            GetBlockByRandom();
         } else if (_cache_setting.replacement_policy == LRU) {
-            _current_block = GetBlockByLRU();
+            GetBlockByLRU();
         }
         break;
     }
@@ -218,7 +218,8 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
     addr.reset();
     std::bitset<32> index(block_set);
 
-    auto a_tag = [_c = this](std::bitset<32> &dst_addr, const ulint block_set) {
+    auto fill_tag_bit = [_c = this](std::bitset<32> &dst_addr,
+                                    const ulint block_set) {
         for (uint i = 31, j = 28; i > (31ul - _c->_bit_tag); --i, --j) {
             dst_addr[i] = _c->_cache[block_set][j];
         }
@@ -230,11 +231,11 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
              ++i, ++j) {
             addr[i] = index[j];
         }
-        a_tag(addr, block_set);
+        fill_tag_bit(addr, block_set);
 
         break;
     case full_associative:
-        a_tag(addr, block_set);
+        fill_tag_bit(addr, block_set);
 
         break;
     case set_associative:
@@ -242,7 +243,7 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
              ++i, ++j) {
             addr[i] = index[j];
         }
-        a_tag(addr, block_set);
+        fill_tag_bit(addr, block_set);
 
         break;
     }
@@ -270,11 +271,9 @@ void Cache::Ready(const std::bitset<32> &addr) {
             if (!_IfBlockAvailable()) {
                 _has_evicted = true;
                 if (_cache_setting.replacement_policy == RANDOM) {
-                    int _ = GetBlockByRandom();
-                    _++;
+                    GetBlockByRandom();
                 } else if (_cache_setting.replacement_policy == LRU) {
-                    int _ = GetBlockByLRU();
-                    _++;
+                    GetBlockByLRU();
                 }
             }
             break;
@@ -325,8 +324,7 @@ bool Cache::_CheckIdent(const std::bitset<32> &cache,
     return true;
 }
 
-ulint Cache::GetBlockByRandom() {
-    ulint res(0);
+void Cache::GetBlockByRandom() {
     std::random_device rd;
     std::mt19937_64 generator(rd());
     std::uniform_int_distribution<int> unif(0, INT32_MAX);
@@ -338,7 +336,6 @@ ulint Cache::GetBlockByRandom() {
         _current_block = static_cast<ulint>(
             unif(generator) / (INT32_MAX / _cache_setting.num_block + 1));
 
-        res = _current_block;
         break;
 
     case set_associative:
@@ -346,11 +343,8 @@ ulint Cache::GetBlockByRandom() {
             unif(generator) / (INT32_MAX / _cache_setting.cache_sets + 1));
         _current_block = _current_set * _cache_setting.cache_sets + temp;
 
-        res = _current_block;
         break;
     }
-
-    return res;
 }
 
 bool Cache::_IfBlockAvailable() { return _has_space; }

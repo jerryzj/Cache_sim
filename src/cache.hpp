@@ -43,7 +43,7 @@ class Cache {
     bool _CheckIdent(const std::bitset<32> &cache, const std::bitset<32> &addr);
 
     // Replacement policy related
-    ulint GetBlockByRandom();
+    void GetBlockByRandom();
     ulint GetBlockByLRU();
     // Return a memory address by given line/block
     std::bitset<32> _CvtToAddr(ulint block_set);

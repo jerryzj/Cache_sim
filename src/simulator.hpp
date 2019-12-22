@@ -4,7 +4,6 @@
 #include "cache.hpp"
 #include "config_parser.hpp"
 #include "loader.hpp"
-#include "victim_cache.hpp"
 #include <cstdint>
 #include <memory>
 
