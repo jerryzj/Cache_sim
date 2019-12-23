@@ -3,7 +3,7 @@
 extern int simulator_verbose_output;
 
 Cache::Cache(const CACHE_SET &cfg)
-    : _has_evicted(false), _current_block(0), _current_set(0), _bit_block(0),
+    : _current_block(0), _current_set(0), _has_evicted(false), _bit_block(0),
       _bit_line(0), _bit_tag(0), _bit_set(0) {
 
     for (auto i : _cache) {
@@ -14,7 +14,7 @@ Cache::Cache(const CACHE_SET &cfg)
 }
 
 Cache::Cache()
-    : _has_evicted(false), _current_block(0), _current_set(0), _bit_block(0),
+    : _current_block(0), _current_set(0), _has_evicted(false), _bit_block(0),
       _bit_line(0), _bit_tag(0), _bit_set(0) {}
 
 Cache::~Cache() = default;
@@ -73,37 +73,55 @@ void Cache::_Cache_Setup() {
     }
 }
 
+bool Cache::IsHit() { return _has_hit; }
+
 bool Cache::_IsHit(const std::bitset<32> &addr) {
     bool ret(false);
 
-    if (_cache_setting.associativity == direct_mapped) {
+    switch (_cache_setting.associativity) {
+    case direct_mapped:
+        /*  For direct-mapped, only check if corresponding line
+            is occupied. If yes, check identity.
+        */
         _current_block = _GetCacheIndex(addr);
-        assert(_cache[_current_block][31] == true);
         if (_cache[_current_block][30]) {
             ret = _CheckIdent(_cache[_current_block], addr);
+        } else {
+            _has_space = true;
         }
-    } else if (_cache_setting.associativity == full_associative) {
+        break;
+
+    case full_associative:
         for (ulint i = 0; i < _cache_setting.num_block; ++i) {
             if (_cache[i][30]) {
                 ret = _CheckIdent(_cache[i], addr);
+            } else {
+                _has_space = true;
             }
+
             if (ret) {
                 _current_block = i;
                 break;
             }
         }
-    } else { // Set associative
+        break;
+
+    case set_associative:
         _current_set = _GetCacheIndex(addr);
         for (ulint i = _cache_setting.cache_sets * _current_set;
              i < ((_current_set + 1) * _cache_setting.cache_sets); ++i) {
             if (_cache[i][30]) {
                 ret = _CheckIdent(_cache[i], addr);
+            } else {
+                _has_space = true;
             }
+
             if (ret) {
                 _current_block = i;
                 break;
             }
         }
+        break;
     }
 
     return ret;
@@ -120,7 +138,6 @@ void Cache::_Read(const std::bitset<32> &addr) {
         }
         break;
     case full_associative:
-        space = false;
         // Find available block
         for (uint i = 0; i < _cache_setting.num_block; ++i) {
             if (!_cache[i][30]) {
@@ -132,7 +149,7 @@ void Cache::_Read(const std::bitset<32> &addr) {
         if (space) {
             _WriteToBlock(addr);
             if (_cache_setting.replacement_policy == LRU) {
-                // need LRU hit handler
+                _LRUHitHandle();
             }
         } else {
             _Replace(addr);
@@ -151,7 +168,7 @@ void Cache::_Read(const std::bitset<32> &addr) {
         if (space) {
             _WriteToBlock(addr);
             if (_cache_setting.replacement_policy == LRU) {
-                // need LRU hit handler
+                _LRUHitHandle();
             }
         } else {
             _Replace(addr);
@@ -169,16 +186,16 @@ void Cache::_Replace(const std::bitset<32> &addr) {
         break;
     case full_associative:
         if (_cache_setting.replacement_policy == RANDOM) {
-            _current_block = GetBlockByRandom();
+            GetBlockByRandom();
         } else if (_cache_setting.replacement_policy == LRU) {
-            _current_block = GetBlockByLRU();
+            GetBlockByLRU();
         }
         break;
     case set_associative:
         if (_cache_setting.replacement_policy == RANDOM) {
-            _current_block = GetBlockByRandom();
+            GetBlockByRandom();
         } else if (_cache_setting.replacement_policy == LRU) {
-            _current_block = GetBlockByLRU();
+            GetBlockByLRU();
         }
         break;
     }
@@ -201,105 +218,74 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
     addr.reset();
     std::bitset<32> index(block_set);
 
+    auto fill_tag_bit = [_c = this](std::bitset<32> &dst_addr,
+                                    const ulint block_set) {
+        for (uint i = 31, j = 28; i > (31ul - _c->_bit_tag); --i, --j) {
+            dst_addr[i] = _c->_cache[block_set][j];
+        }
+    };
+
     switch (_cache_setting.associativity) {
     case direct_mapped:
         for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_line);
              ++i, ++j) {
             addr[i] = index[j];
         }
-        // TODO: Use lambda function replace
-        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
-            addr[i] = _cache[block_set][j];
-        }
+        fill_tag_bit(addr, block_set);
 
         break;
     case full_associative:
-        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
-            addr[i] = _cache[block_set][j];
-        }
+        fill_tag_bit(addr, block_set);
+
         break;
     case set_associative:
         for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_set);
              ++i, ++j) {
             addr[i] = index[j];
         }
+        fill_tag_bit(addr, block_set);
 
-        for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
-            addr[i] = _cache[block_set][j];
-        }
         break;
     }
 
     return addr;
 }
 
-std::bitset<32> Cache::_Evicted(const std::bitset<32> &addr) {
-    _cur_addr = addr;
-    _has_evicted = false;
-    bool space(false);
+void Cache::Ready(const std::bitset<32> &addr) {
+    _current_addr = addr;
+    _current_block = 0;
+    _current_set = 0;
+    _has_space = false;
 
-    if (_IsHit(_cur_addr)) {
-        _poten_victim |= std::bitset<32>(0xffffffff);
-    } else {
+    _has_hit = _IsHit(_current_addr);
+
+    if (!_has_hit) {
         switch (_cache_setting.associativity) {
         case direct_mapped:
-            _current_block = _GetCacheIndex(_cur_addr);
-            if (_cache[_current_block][30] &&
-                !_CheckIdent(_cache[_current_block], _cur_addr)) {
+            if (!_IfBlockAvailable()) {
                 _has_evicted = true;
-                _poten_victim = this->_CvtToAddr(_current_block);
             }
             break;
         case full_associative:
-            for (uint i = 0; i < _cache_setting.num_block; ++i) {
-                if (!_cache[i][30]) {
-                    space = true;
-                    _poten_victim |= std::bitset<32>(0xffffffff);
-                    break;
-                }
-            }
-            if (space) {
-                break;
-            }
-            _has_evicted = true;
-            if (_cache_setting.replacement_policy == RANDOM) {
-                _poten_victim = this->_CvtToAddr(GetBlockByRandom());
-            } else if (_cache_setting.replacement_policy == LRU) {
-                // Do sth.
-            }
-            break;
         case set_associative:
-            _current_set = _GetCacheIndex(_cur_addr);
-
-            for (ulint i = (_current_set * _cache_setting.cache_sets);
-                 i < ((_current_set + 1)) * _cache_setting.cache_sets; i++) {
-                if (!_cache[i][30]) {
-                    space = true;
-                    _poten_victim |= std::bitset<32>(0xffffffff);
-                    break;
+            if (!_IfBlockAvailable()) {
+                _has_evicted = true;
+                if (_cache_setting.replacement_policy == RANDOM) {
+                    GetBlockByRandom();
+                } else if (_cache_setting.replacement_policy == LRU) {
+                    GetBlockByLRU();
                 }
-            }
-            if (space) {
-                break;
-            }
-            _has_evicted = true;
-            if (_cache_setting.replacement_policy == RANDOM) {
-                _poten_victim = this->_CvtToAddr(GetBlockByRandom());
-            } else if (_cache_setting.replacement_policy == LRU) {
-                // Do sth.
             }
             break;
         }
     }
-
-    return _poten_victim;
 }
 
 void Cache::_Update() {
     if (_has_evicted) {
-        _WriteToBlock(_cur_addr);
+        _WriteToBlock(_current_addr);
     } else {
-        _Read(_cur_addr);
+        _Read(_current_addr);
     }
 }
 
@@ -338,8 +324,7 @@ bool Cache::_CheckIdent(const std::bitset<32> &cache,
     return true;
 }
 
-ulint Cache::GetBlockByRandom() {
-    ulint res(0);
+void Cache::GetBlockByRandom() {
     std::random_device rd;
     std::mt19937_64 generator(rd());
     std::uniform_int_distribution<int> unif(0, INT32_MAX);
@@ -348,25 +333,23 @@ ulint Cache::GetBlockByRandom() {
     case direct_mapped:
         break;
     case full_associative:
-        do {
-            _current_block = static_cast<ulint>(
-                unif(generator) / (INT32_MAX / _cache_setting.num_block + 1));
-        } while (_CheckIdent(_cache[_current_block], _cur_addr));
-        res = _current_block;
+        _current_block = static_cast<ulint>(
+            unif(generator) / (INT32_MAX / _cache_setting.num_block + 1));
+
         break;
 
     case set_associative:
-        do {
-            ulint temp = static_cast<ulint>(
-                unif(generator) / (INT32_MAX / _cache_setting.cache_sets + 1));
-            _current_block = _current_set * _cache_setting.cache_sets + temp;
-        } while (_CheckIdent(_cache[_current_block], _cur_addr));
-        res = _current_block;
+        ulint temp = static_cast<ulint>(
+            unif(generator) / (INT32_MAX / _cache_setting.cache_sets + 1));
+        _current_block = _current_set * _cache_setting.cache_sets + temp;
+
         break;
     }
-
-    return res;
 }
+
+bool Cache::_IfBlockAvailable() { return _has_space; }
+
+void Cache::_LRUHitHandle() {}
 
 ulint Cache::GetBlockByLRU() {
     // TODO: Your part 1 assignment
