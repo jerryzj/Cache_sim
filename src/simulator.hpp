@@ -2,7 +2,7 @@
 #define SIMULATOR_HPP
 
 #include "cache.hpp"
-#include "config_parser.hpp"
+#include "cache_parser.hpp"
 #include "loader.hpp"
 #include <cstdint>
 #include <memory>
@@ -34,7 +34,6 @@ class Simulator {
     void RunSimulation();
     void DumpResult();      // Print simulation result
     void DumpCACTIConfig(); // Generate CACTI configuration file
-    void ParseCacheConfig();
     void ReadConfig();
 
   private:
@@ -43,8 +42,7 @@ class Simulator {
     const std::string &cache_cfg_file;
     const std::string &trace_file;
     bool _has_victim;
-    CACHE_SET _cache_setting;
-    CACHE_SET _victim_setting;
+    std::vector<CACHE_SET> _cache_list;
     COUNTER _counter; // Runtime statistics
 
     bool _CacheHandler(inst_t inst); // Main Instruction processing

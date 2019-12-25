@@ -1,11 +1,11 @@
 #ifndef _CACHE_HPP_
 #define _CACHE_HPP_
-
-#include "config_parser.hpp"
+#include "cache_setting.hpp"
 #include <bitset>
 #include <cassert>
 #include <exception>
 #include <iomanip>
+#include <iostream>
 #include <random>
 #include <vector>
 

@@ -4,80 +4,15 @@ Simulator::Simulator(const std::string &cache_cfg,
                      const std::string &program_trace)
     : cache_cfg_file(cache_cfg), trace_file(program_trace), _has_victim(false) {
     ReadConfig();
-    main_cache = std::make_unique<Cache>(this->_cache_setting);
+    main_cache = std::make_unique<Cache>(this->_cache_list[0]);
     inst_loader = std::make_unique<InstructionLoader>(trace_file);
 }
 
 Simulator::~Simulator() = default;
 
 void Simulator::ReadConfig() {
-    // TODO:
-    // it's time to integrate other well-supported config format, i.e json, yaml
-    // it's very un-maintainable to manipulate with plain text config file.
-
-    CACHE_SET _cache_conf;
-    _cache_conf.type = L1; // main cache
-    bool is_directedmap_flag(false);
-    std::list<std::string> config_raw, config_ready;
-
-    // Preprocessing config file
-    config_raw = readFile(cache_cfg_file.c_str());
-    config_ready = removeComments(config_raw);
-
-    // Assert config lines is in the right range
-    assert(config_ready.size() >= 3 && config_ready.size() <= 9);
-
-    // Read cache size
-    assert(readParameter(config_ready.front(), _cache_conf.cache_size));
-    config_ready.pop_front();
-
-    // Read cache line size
-    assert(readParameter(config_ready.front(), _cache_conf.block_size));
-    config_ready.pop_front();
-
-    // Read cache associativity
-    switch (stoi(config_ready.front())) {
-    case 1:
-        _cache_conf.associativity = direct_mapped;
-        break;
-    case 2:
-        _cache_conf.associativity = set_associative;
-        break;
-    case 3:
-        _cache_conf.associativity = full_associative;
-        break;
-    default:
-        std::cerr << "Invalid Associativity" << std::endl;
-        std::exit(-1);
-    }
-    config_ready.pop_front();
-
-    if (_cache_conf.associativity == direct_mapped) {
-        // Note that replacement policy is invalid for direct-mapped cache
-        _cache_conf.replacement_policy = NONE;
-        is_directedmap_flag = true;
-    } else if (_cache_conf.associativity == set_associative) {
-        // Read set size
-        assert(readParameter(config_ready.front(), _cache_conf.cache_sets));
-        config_ready.pop_front();
-    }
-    if (!is_directedmap_flag) {
-        // Read replacement policy
-        switch (stoi(config_ready.front())) {
-        case 1:
-            _cache_conf.replacement_policy = RANDOM;
-            break;
-        case 2:
-            _cache_conf.replacement_policy = LRU;
-            break;
-        // Add your own policy here, ex: RRIP
-        default:
-            std::cerr << "Invalid replacement policy" << std::endl;
-            std::exit(-1);
-        }
-        config_ready.pop_front();
-    }
-    this->_cache_setting = _cache_conf;
+    std::vector<CACHE_SET> caches;
+    ParseCacheConfig(cache_cfg_file.c_str(), this->_cache_list);
 
     return;
 }
@@ -168,10 +103,10 @@ void Simulator::DumpResult() {
     std::cout << "Test file: " << this->trace_file << std::endl;
 
     std::cout << "===================================" << std::endl;
-    std::cout << "┌----------------┐" << std::endl;
-    std::cout << "│  Main Cache    │" << std::endl;
-    std::cout << "└----------------┘" << std::endl;
-    _ShowSettingInfo(this->_cache_setting);
+    std::cout << "┌-------------------┐" << std::endl;
+    std::cout << "│  Primary Cache    │" << std::endl;
+    std::cout << "└-------------------┘" << std::endl;
+    _ShowSettingInfo(this->_cache_list[0]);
 
     std::cout << "===================================" << std::endl;
 
@@ -185,27 +120,25 @@ void Simulator::DumpResult() {
 }
 
 void Simulator::DumpCACTIConfig() {
-    _DumpCACTIConfig("cacti_main.cfg", this->_cache_setting);
-    if (_has_victim)
-        _DumpCACTIConfig("cacti_victim.cfg", this->_victim_setting);
+    _DumpCACTIConfig("cacti_main.cfg", this->_cache_list[0]);
 }
 
-void Simulator::_ShowSettingInfo(const CACHE_SET &_cache_setting) {
-    if (_cache_setting.type == VICTIM) {
-        std::cout << "Cache size: " << _cache_setting.cache_size << " blocks"
+void Simulator::_ShowSettingInfo(const CACHE_SET &_cache_list) {
+    if (_cache_list.type == VICTIM) {
+        std::cout << "Cache size: " << _cache_list.cache_size << " blocks"
                   << std::endl;
     } else {
-        std::cout << "Cache size: " << _cache_setting.cache_size << "KB"
+        std::cout << "Cache size: " << _cache_list.cache_size << "KB"
                   << std::endl;
     }
-    std::cout << "Cache block size: " << _cache_setting.block_size << "B"
+    std::cout << "Cache block size: " << _cache_list.block_size << "B"
               << std::endl;
-    switch (_cache_setting.associativity) {
+    switch (_cache_list.associativity) {
     case direct_mapped:
         std::cout << "Associativity: direct_mapped" << std::endl;
         break;
     case set_associative:
-        std::cout << "Associativity: " << _cache_setting.cache_sets
+        std::cout << "Associativity: " << _cache_list.cache_sets
                   << "-way set_associative" << std::endl;
         break;
     case full_associative:
@@ -215,7 +148,7 @@ void Simulator::_ShowSettingInfo(const CACHE_SET &_cache_setting) {
         std::cerr << "Error associtivity setting" << std::endl;
         exit(-1);
     }
-    switch (_cache_setting.replacement_policy) {
+    switch (_cache_list.replacement_policy) {
     case NONE:
         std::cout << "Replacement policy: None" << std::endl;
         break;
@@ -232,7 +165,7 @@ void Simulator::_ShowSettingInfo(const CACHE_SET &_cache_setting) {
 }
 
 void Simulator::_DumpCACTIConfig(const std::string &filename,
-                                 const CACHE_SET &_cache_setting) {
+                                 const CACHE_SET &_cache_list) {
     std::ofstream out_file(filename, std::ios::out);
 
     // BUG: The output file doesn't work in CACTI, please fix it.
@@ -248,14 +181,13 @@ void Simulator::_DumpCACTIConfig(const std::string &filename,
     out_file << "-Bitline floating - \"false\"\n";
     out_file << "-Interconnect Power Gating - \"false\"\n";
     out_file << "-Power Gating Performance Loss 0.01\n";
-    out_file << "-block size (bytes) " << _cache_setting.block_size
-             << std::endl;
-    switch (_cache_setting.associativity) {
+    out_file << "-block size (bytes) " << _cache_list.block_size << std::endl;
+    switch (_cache_list.associativity) {
     case direct_mapped:
         out_file << "-associativity 1\n";
         break;
     case set_associative:
-        out_file << "-associativity " << _cache_setting.cache_sets << std::endl;
+        out_file << "-associativity " << _cache_list.cache_sets << std::endl;
         break;
     case full_associative:
         out_file << "-associativity 0\n";
