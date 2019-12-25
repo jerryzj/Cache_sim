@@ -33,54 +33,25 @@ void Simulator::RunSimulation() {
 }
 
 bool Simulator::_CacheHandler(inst_t inst) {
-    bool is_load(false), is_store(false), is_space(false);
+    addr_t next_addr = Cvt2AddrBits(inst.addr_raw);
+    this->main_cache->Ready(next_addr);
+
     // Determine what kind of the instruction
     switch (inst.op) {
     case I_LOAD:
-        is_load = true;
+        _Load(next_addr);
         break;
     case I_STORE:
-        is_store = true;
+        _Store(next_addr);
         break;
     case I_NONE:
-        is_space = true;
-        break;
-    }
-
-    addr_t next_addr = Cvt2AddrBits(inst.addr_raw);
-
-    this->main_cache->Ready(next_addr);
-
-    // Handle the address
-    if (is_load) {
-        ++_counter.access;
-        ++_counter.load;
-
-        if (this->main_cache->IsHit()) {
-            ++_counter.load_hit;
-            ++_counter.hit_in_main;
-        } else {
-            this->main_cache->_Read(next_addr);
-        }
-    } else if (is_store) {
-        ++_counter.access;
-        ++_counter.store;
-
-        if (this->main_cache->_IsHit(next_addr)) {
-            ++_counter.store_hit;
-            ++_counter.hit_in_main;
-
-        } else {
-            this->main_cache->_Read(next_addr);
-        }
-    } else if (is_space) {
         ++_counter.space;
-    } else {
+        break;
+    default:
         std::cerr << "Unexpected error in _CacheHandler()" << std::endl;
         std::cerr << "ERROR line: " << inst.addr_raw << std::endl;
         return false;
     }
-
     return true;
 }
 
@@ -88,12 +59,41 @@ void Simulator::_CalHitRate() {
     assert(_counter.access != 0);
     assert(_counter.load != 0);
     assert(_counter.store != 0);
-    _counter.hit = _counter.hit_in_main + _counter.hit_in_victim;
+    _counter.hit = _counter.hit_in_main;
     _counter.avg_hit_rate = static_cast<double>(_counter.hit) / _counter.access;
     _counter.load_hit_rate =
         static_cast<double>(_counter.load_hit) / _counter.load;
     _counter.store_hit_rate =
         static_cast<double>(_counter.store_hit) / _counter.store;
+}
+
+bool Simulator::_IsHit(const addr_t &addr) {
+    return this->main_cache->_IsHit(addr);
+}
+
+void Simulator::_Load(const addr_t &addr) {
+    ++_counter.access;
+    ++_counter.load;
+
+    if (_IsHit(addr)) {
+        ++_counter.load_hit;
+        ++_counter.hit_in_main;
+    } else {
+        this->main_cache->_Read(addr);
+    }
+}
+
+void Simulator::_Store(const addr_t &addr) {
+    ++_counter.access;
+    ++_counter.store;
+
+    if (_IsHit(addr)) {
+        ++_counter.store_hit;
+        ++_counter.hit_in_main;
+    } else {
+
+        this->main_cache->_Read(addr);
+    }
 }
 
 void Simulator::DumpResult() {

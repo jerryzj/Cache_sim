@@ -16,14 +16,13 @@ struct COUNTER {
     uint64_t load_hit;  // # of load hit
     uint64_t store_hit; // # of store hit
     uint64_t hit_in_main;
-    uint64_t hit_in_victim;
     double avg_hit_rate;   // average hit rate
     double load_hit_rate;  // hit rate of loads
     double store_hit_rate; // hit rarte of stores
     explicit COUNTER()
         : access(0), load(0), store(0), space(0), hit(0), load_hit(0),
-          store_hit(0), hit_in_main(0), hit_in_victim(0), avg_hit_rate(0.0),
-          load_hit_rate(0.0), store_hit_rate(0.0) {}
+          store_hit(0), hit_in_main(0), avg_hit_rate(0.0), load_hit_rate(0.0),
+          store_hit_rate(0.0) {}
 };
 
 class Simulator {
@@ -48,6 +47,8 @@ class Simulator {
     uint64_t _GetCacheIndex(const std::bitset<32> &addr); // Get index of block
     bool _CheckIdent(const std::bitset<32> &cache, const std::bitset<32> &addr);
     // Check whether current address is in certain cache block
+    void _Load(const addr_t &addr);
+    void _Store(const addr_t &addr);
     void _CalHitRate();                         // Caculate hit rate
     bool _IsHit(const std::bitset<32> &addr);   // Data is hit/miss
     void _Read(const std::bitset<32> &addr);    // Read data from memory
