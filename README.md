@@ -25,5 +25,5 @@ The executable will be named as ``cache_sim``.
 ## Run simulation
 
 ```shell
-	./cache_sim  -t ../TestData/gcc.trace -c ../TestData/cache1.cfg
+	./cache_sim  -t ../TestData/gcc.trace -c ../TestData/cache1.json
 ```
