@@ -1,5 +1,6 @@
 #ifndef _DATATYPE_HPP_
 #define _DATATYPE_HPP_
+
 #include <bitset>
 #include <fstream>
 #include <iostream>

@@ -1,5 +1,6 @@
 #ifndef _CACHE_HPP_
 #define _CACHE_HPP_
+
 #include "cache_setting.hpp"
 #include "datatype.hpp"
 #include <bitset>
