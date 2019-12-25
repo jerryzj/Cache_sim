@@ -3,19 +3,13 @@
 Simulator::Simulator(const std::string &cache_cfg,
                      const std::string &program_trace)
     : cache_cfg_file(cache_cfg), trace_file(program_trace), _has_victim(false) {
-    ReadConfig();
+    ParseCacheConfig(cache_cfg_file.c_str(), this->_cache_list);
+
     main_cache = std::make_unique<Cache>(this->_cache_list[0]);
     inst_loader = std::make_unique<InstructionLoader>(trace_file);
 }
 
 Simulator::~Simulator() = default;
-
-void Simulator::ReadConfig() {
-    std::vector<CACHE_SET> caches;
-    ParseCacheConfig(cache_cfg_file.c_str(), this->_cache_list);
-
-    return;
-}
 
 void Simulator::RunSimulation() {
     while (inst_loader->IfAvailable()) {
@@ -96,27 +90,31 @@ void Simulator::_Store(const addr_t &addr) {
     }
 }
 
-void Simulator::DumpResult() {
+void Simulator::DumpResult(bool oneline) {
 
     // TODO: dump simulation results to yaml file,
     //       then add another yaml parser to verify correctness.
-    std::cout << "Test file: " << this->trace_file << std::endl;
+    if (oneline) {
+        std::cout << std::setprecision(6) << _counter.avg_hit_rate << std::endl;
+    } else {
+        std::cout << "Test file: " << this->trace_file << std::endl;
 
-    std::cout << "===================================" << std::endl;
-    std::cout << "┌-------------------┐" << std::endl;
-    std::cout << "│  Primary Cache    │" << std::endl;
-    std::cout << "└-------------------┘" << std::endl;
-    _ShowSettingInfo(this->_cache_list[0]);
+        std::cout << "===================================" << std::endl;
+        std::cout << "┌-------------------┐" << std::endl;
+        std::cout << "│  Primary Cache    │" << std::endl;
+        std::cout << "└-------------------┘" << std::endl;
+        _ShowSettingInfo(this->_cache_list[0]);
 
-    std::cout << "===================================" << std::endl;
+        std::cout << "===================================" << std::endl;
 
-    std::cout << "Number of cache access: " << _counter.access << std::endl;
-    std::cout << "Number of cache load: " << _counter.load << std::endl;
-    std::cout << "Number of cache store: " << _counter.store << std::endl;
-    std::cout << "Number of total cache hit: " << _counter.hit << std::endl;
+        std::cout << "Number of cache access: " << _counter.access << std::endl;
+        std::cout << "Number of cache load: " << _counter.load << std::endl;
+        std::cout << "Number of cache store: " << _counter.store << std::endl;
+        std::cout << "Number of total cache hit: " << _counter.hit << std::endl;
 
-    std::cout << "Cache hit rate: " << std::setprecision(6)
-              << _counter.avg_hit_rate << std::endl;
+        std::cout << "Cache hit rate: " << std::setprecision(6)
+                  << _counter.avg_hit_rate << std::endl;
+    }
 }
 
 void Simulator::_ShowSettingInfo(const CACHE_SET &_cache_list) {

@@ -31,8 +31,7 @@ class Simulator {
                        const std::string &program_trace);
     ~Simulator();
     void RunSimulation();
-    void DumpResult();      // Print simulation result
-    void ReadConfig();
+    void DumpResult(bool oneline); // Print simulation result
 
   private:
     std::unique_ptr<InstructionLoader> inst_loader;

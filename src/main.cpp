@@ -5,6 +5,8 @@ int main(int argc, char **argv) {
     ArgumentParser parser("Argument parser");
     parser.add_argument("-t", "Program trace file", true);
     parser.add_argument("-c", "Cache config file", true);
+    parser.add_argument("-q", "--one-line", "Only output one-line hit rate",
+                        false);
 
     try {
         parser.parse(argc, argv);
@@ -23,7 +25,10 @@ int main(int argc, char **argv) {
 
     Simulator simulator(config_path, trace_path);
     simulator.RunSimulation();
-    simulator.DumpResult();
+    if (parser.exists("one-line"))
+        simulator.DumpResult(true);
+    else
+        simulator.DumpResult(false);
 
     return 0;
 }
