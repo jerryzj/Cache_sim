@@ -22,7 +22,7 @@ void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest) {
         file >> cache_conf;
         file.close();
     } catch (json::parse_error &e) {
-        std::cout << "message: " << e.what() << '\n'
+        std::cerr << "message: " << e.what() << '\n'
                   << "exception id: " << e.id << '\n'
                   << "byte position of error: " << e.byte << std::endl;
     }
@@ -59,7 +59,7 @@ void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest) {
                 exit(-1);
             }
         } catch (const json::type_error &e) {
-            std::cout << "message: " << e.what() << '\n'
+            std::cerr << "message: " << e.what() << '\n'
                       << "exception id: " << e.id << std::endl;
         }
         dest.push_back(_c);
