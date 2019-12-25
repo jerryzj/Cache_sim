@@ -11,6 +11,7 @@ void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest) {
                         std::ifstream::badbit);
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
+        exit(-1);
     }
     /*
         Parse from json file on disk.
