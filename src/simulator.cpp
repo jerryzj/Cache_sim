@@ -119,10 +119,6 @@ void Simulator::DumpResult() {
               << _counter.avg_hit_rate << std::endl;
 }
 
-void Simulator::DumpCACTIConfig() {
-    _DumpCACTIConfig("cacti_main.cfg", this->_cache_list[0]);
-}
-
 void Simulator::_ShowSettingInfo(const CACHE_SET &_cache_list) {
     if (_cache_list.type == VICTIM) {
         std::cout << "Cache size: " << _cache_list.cache_size << " blocks"
@@ -162,79 +158,4 @@ void Simulator::_ShowSettingInfo(const CACHE_SET &_cache_list) {
         std::cerr << "Error replacement setting" << std::endl;
         exit(-1);
     }
-}
-
-void Simulator::_DumpCACTIConfig(const std::string &filename,
-                                 const CACHE_SET &_cache_list) {
-    std::ofstream out_file(filename, std::ios::out);
-
-    // BUG: The output file doesn't work in CACTI, please fix it.
-    if (out_file.fail()) {
-        std::cerr << "Unable to generate cacti.cfg" << std::endl;
-        exit(-1);
-    }
-    out_file << "# Cache size\n";
-    out_file << "-size (bytes) 65536\n";
-    out_file << "-Array Power Gating - \"false\" \n";
-    out_file << "-WL Power Gating - \"false\"\n";
-    out_file << "-CL Power Gating - \"false\"\n";
-    out_file << "-Bitline floating - \"false\"\n";
-    out_file << "-Interconnect Power Gating - \"false\"\n";
-    out_file << "-Power Gating Performance Loss 0.01\n";
-    out_file << "-block size (bytes) " << _cache_list.block_size << std::endl;
-    switch (_cache_list.associativity) {
-    case direct_mapped:
-        out_file << "-associativity 1\n";
-        break;
-    case set_associative:
-        out_file << "-associativity " << _cache_list.cache_sets << std::endl;
-        break;
-    case full_associative:
-        out_file << "-associativity 0\n";
-        break;
-    default:
-        std::cerr << "Invalid associativity" << std::endl;
-        out_file.close();
-        exit(-1);
-    }
-    out_file << "-read-write port 1\n";
-    out_file << "-exclusive read port 0\n";
-    out_file << "-exclusive write port 0\n";
-    out_file << "-single ended read ports 0\n";
-    out_file << "-UCA bank count 1\n";
-    out_file << "-technology (u) 0.090\n";
-    out_file << "-Data array cell type - \"itrs-hp\"\n";
-    out_file << "-Data array peripheral type - \"itrs-hp\"\n";
-    out_file << "-Tag array cell type - \"itrs-hp\"\n";
-    out_file << "-Tag array peripheral type - \"itrs-hp\"\n";
-    out_file << "-output/input bus width 64\n";
-    out_file << "-operating temperature (K) 360\n";
-    out_file << "-cache type \"cache\"\n";
-    out_file << "-tag size (b) \"default\"\n";
-    out_file << "-access mode (normal, sequential, fast) - \"normal\"\n";
-    out_file << "-design objective (weight delay, dynamic power, leakage "
-                "power, cycle time, area) 0:0:0:100:0\n";
-    out_file << "-deviate (delay, dynamic power, leakage power, cycle time, "
-                "area) 20:100000:100000:100000:100000\n";
-    out_file << "-NUCAdesign objective (weight delay, dynamic power, leakage "
-                "power, cycle time, area) 100:100:0:0:100\n";
-    out_file << "-NUCAdeviate (delay, dynamic power, leakage power, cycle "
-                "time, area) 10:10000:10000:10000:10000\n";
-    out_file << "-Optimize ED or ED^2 (ED, ED^2, NONE): \"ED^2\"\n";
-    out_file << "-Cache model (NUCA, UCA)  - \"UCA\"\n";
-    out_file
-        << "-Wire signaling (fullswing, lowswing, default) - \"Global_30\"\n";
-    out_file << "-Wire inside mat - \"semi-global\"\n";
-    out_file << "-Wire outside mat - \"semi-global\"\n";
-    out_file << "-Interconnect projection - \"conservative\"\n";
-    out_file << "-Core count 8\n";
-    out_file << "-Cache level (L2/L3) - \"L2\"\n";
-    out_file << "-Add ECC - \"true\"\n";
-    out_file << "-Print level (DETAILED, CONCISE) - \"DETAILED\"\n";
-    out_file << "-Print input parameters - \"true\"\n";
-    out_file << "-Force cache config - \"false\"\n";
-    // out_file<< "-read-write port 1\n";
-    // out_file<< "-read-write port 1\n";
-    // out_file<< "-read-write port 1\n";
-    out_file.close();
 }
