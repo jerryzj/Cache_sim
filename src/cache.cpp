@@ -1,10 +1,9 @@
 #include "cache.hpp"
 
-extern int simulator_verbose_output;
-
 Cache::Cache(const CACHE_SET &cfg)
-    : _current_block(0), _current_set(0), _has_evicted(false), _bit_block(0),
-      _bit_line(0), _bit_tag(0), _bit_set(0) {
+    : _current_block(0), _current_set(0), _has_evicted(false),
+      _has_space(false), _has_hit(false), _bit_block(0), _bit_line(0),
+      _bit_tag(0), _bit_set(0) {
 
     for (auto i : _cache) {
         i.reset(); // reset cache
@@ -14,8 +13,9 @@ Cache::Cache(const CACHE_SET &cfg)
 }
 
 Cache::Cache()
-    : _current_block(0), _current_set(0), _has_evicted(false), _bit_block(0),
-      _bit_line(0), _bit_tag(0), _bit_set(0) {}
+    : _current_block(0), _current_set(0), _has_evicted(false),
+      _has_space(false), _has_hit(false), _bit_block(0), _bit_line(0),
+      _bit_tag(0), _bit_set(0) {}
 
 Cache::~Cache() = default;
 
@@ -232,11 +232,9 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
             addr[i] = index[j];
         }
         fill_tag_bit(addr, block_set);
-
         break;
     case full_associative:
         fill_tag_bit(addr, block_set);
-
         break;
     case set_associative:
         for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_set);
@@ -244,7 +242,6 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
             addr[i] = index[j];
         }
         fill_tag_bit(addr, block_set);
-
         break;
     }
 
@@ -335,25 +332,22 @@ void Cache::GetBlockByRandom() {
     case full_associative:
         _current_block = static_cast<ulint>(
             unif(generator) / (INT32_MAX / _cache_setting.num_block + 1));
-
         break;
 
     case set_associative:
         ulint temp = static_cast<ulint>(
             unif(generator) / (INT32_MAX / _cache_setting.cache_sets + 1));
         _current_block = _current_set * _cache_setting.cache_sets + temp;
-
         break;
     }
 }
 
 bool Cache::_IfBlockAvailable() { return _has_space; }
 
-void Cache::_LRUHitHandle() {}
-
-ulint Cache::GetBlockByLRU() {
+void Cache::_LRUHitHandle() {
     // TODO: Your part 1 assignment
-    ulint res(0);
+}
 
-    return res;
+void Cache::GetBlockByLRU() {
+    // TODO: Your part 1 assignment
 }

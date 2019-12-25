@@ -44,7 +44,7 @@ class Cache {
 
     // Replacement policy related
     void GetBlockByRandom();
-    ulint GetBlockByLRU();
+    void GetBlockByLRU();
     // Return a memory address by given line/block
     std::bitset<32> _CvtToAddr(ulint block_set);
     void _Update();
