@@ -8,7 +8,7 @@ void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest) {
     try {
         file.open(filename);
         file.exceptions(std::ifstream::eofbit | std::ifstream::failbit |
-                     std::ifstream::badbit);
+                        std::ifstream::badbit);
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
     }
