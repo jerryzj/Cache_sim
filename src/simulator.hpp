@@ -1,8 +1,8 @@
-#ifndef SIMULATOR_HPP
-#define SIMULATOR_HPP
+#ifndef _SIMULATOR_HPP_
+#define _SIMULATOR_HPP_
 
 #include "cache.hpp"
-#include "cache_parser.hpp"
+#include "config_parser.hpp"
 #include "loader.hpp"
 #include <cstdint>
 #include <memory>
