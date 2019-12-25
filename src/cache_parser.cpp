@@ -4,16 +4,22 @@ using json = nlohmann::json;
 
 void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest) {
     json cache_conf;
-
+    std::ifstream file;
+    try {
+        file.open(filename);
+        file.exceptions(std::ifstream::eofbit | std::ifstream::failbit |
+                     std::ifstream::badbit);
+    } catch (std::exception const &e) {
+        std::cerr << e.what() << std::endl;
+    }
     /*
         Parse from json file on disk.
         ref:
        https://nlohmann.github.io/json/classnlohmann_1_1basic__json_af1efc2468e6022be6e35fc2944cabe4d.html
     */
     try {
-        std::ifstream f(filename);
-        f >> cache_conf;
-        f.close();
+        file >> cache_conf;
+        file.close();
     } catch (json::parse_error &e) {
         std::cout << "message: " << e.what() << '\n'
                   << "exception id: " << e.id << '\n'
