@@ -1,11 +1,12 @@
 #ifndef _CACHE_HPP_
 #define _CACHE_HPP_
-
-#include "config_parser.hpp"
+#include "cache_setting.hpp"
+#include "datatype.hpp"
 #include <bitset>
 #include <cassert>
 #include <exception>
 #include <iomanip>
+#include <iostream>
 #include <random>
 #include <vector>
 
@@ -24,41 +25,40 @@ class Cache {
 
   protected:
     // Main handling Functions
-    bool _CacheHandler(char *trace_line);       // Main Instruction processing
-    bool _IsHit(const std::bitset<32> &addr);   // Data is hit/miss
-    void _Read(const std::bitset<32> &addr);    // Read data from memory
-    void _Drop();                               // Write data to memory
-    void _Replace(const std::bitset<32> &addr); // Replace cache block
+    bool _CacheHandler(char *trace_line); // Main Instruction processing
+    bool _IsHit(const addr_t &addr);      // Data is hit/miss
+    void _Read(const addr_t &addr);       // Read data from memory
+    void _Drop();                         // Write data to memory
+    void _Replace(const addr_t &addr);    // Replace cache block
     // Predict and return potential evicted cache address in current instruction
-    void Ready(const std::bitset<32> &addr);
+    void Ready(const addr_t &addr);
 
     // Utility functions
     void _Cache_Setup();
-    void
-    _WriteToBlock(const std::bitset<32> &addr); // Write data to cache block
-    ulint _GetCacheIndex(const std::bitset<32> &addr); // Get index of block
+    void _WriteToBlock(const addr_t &addr);   // Write data to cache block
+    ulint _GetCacheIndex(const addr_t &addr); // Get index of block
     bool _IfBlockAvailable();
 
     // Check whether current address is in certain cache block
-    bool _CheckIdent(const std::bitset<32> &cache, const std::bitset<32> &addr);
+    bool _CheckIdent(const addr_t &cache, const addr_t &addr);
 
     // Replacement policy related
     void GetBlockByRandom();
-    ulint GetBlockByLRU();
+    void GetBlockByLRU();
     // Return a memory address by given line/block
-    std::bitset<32> _CvtToAddr(ulint block_set);
+    addr_t _CvtToAddr(ulint block_set);
     void _Update();
     void _LRUHitHandle();
     // Variables
-    std::bitset<32> _cache[MAX_LINE]; // Cache status
+    addr_t _cache[MAX_LINE]; // Cache status
     // [31]: valid bit [30]: hit [29]: dirty bit [28]~[0]: data
     std::vector<uint> _LRU_priority; // Priority table for LRU
 
     // Flags
     ulint _current_block; // The block being processed
     ulint _current_set;   // The set being processed
-    std::bitset<32> _current_addr;
-    std::bitset<32> _poten_victim;
+    addr_t _current_addr;
+    addr_t _poten_victim;
     bool _has_evicted;
     bool _has_space;
     bool _has_hit;

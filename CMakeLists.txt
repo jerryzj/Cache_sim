@@ -19,6 +19,7 @@ set(CMAKE_CXX_COMPILER "clang++")
 
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB HEADERS "src/*.hpp")
+include_directories("include")
 clangformat_setup(${SOURCES} ${HEADERS})
 
 add_executable(cache_sim ${SOURCES})

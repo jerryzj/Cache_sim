@@ -1,10 +1,9 @@
 #include "cache.hpp"
 
-extern int simulator_verbose_output;
-
 Cache::Cache(const CACHE_SET &cfg)
-    : _current_block(0), _current_set(0), _has_evicted(false), _bit_block(0),
-      _bit_line(0), _bit_tag(0), _bit_set(0) {
+    : _current_block(0), _current_set(0), _has_evicted(false),
+      _has_space(false), _has_hit(false), _bit_block(0), _bit_line(0),
+      _bit_tag(0), _bit_set(0) {
 
     for (auto i : _cache) {
         i.reset(); // reset cache
@@ -14,8 +13,9 @@ Cache::Cache(const CACHE_SET &cfg)
 }
 
 Cache::Cache()
-    : _current_block(0), _current_set(0), _has_evicted(false), _bit_block(0),
-      _bit_line(0), _bit_tag(0), _bit_set(0) {}
+    : _current_block(0), _current_set(0), _has_evicted(false),
+      _has_space(false), _has_hit(false), _bit_block(0), _bit_line(0),
+      _bit_tag(0), _bit_set(0) {}
 
 Cache::~Cache() = default;
 
@@ -75,7 +75,7 @@ void Cache::_Cache_Setup() {
 
 bool Cache::IsHit() { return _has_hit; }
 
-bool Cache::_IsHit(const std::bitset<32> &addr) {
+bool Cache::_IsHit(const addr_t &addr) {
     bool ret(false);
 
     switch (_cache_setting.associativity) {
@@ -127,7 +127,7 @@ bool Cache::_IsHit(const std::bitset<32> &addr) {
     return ret;
 }
 
-void Cache::_Read(const std::bitset<32> &addr) {
+void Cache::_Read(const addr_t &addr) {
     bool space = false;
     switch (_cache_setting.associativity) {
     case direct_mapped:
@@ -177,7 +177,7 @@ void Cache::_Read(const std::bitset<32> &addr) {
     }
 }
 
-void Cache::_Replace(const std::bitset<32> &addr) {
+void Cache::_Replace(const addr_t &addr) {
     // Find victim block
     switch (_cache_setting.associativity) {
     case direct_mapped:
@@ -213,13 +213,12 @@ void Cache::_Drop() {
     _cache[_current_block][30] = false;
 }
 
-std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
-    std::bitset<32> addr;
+addr_t Cache::_CvtToAddr(const ulint block_set) {
+    addr_t addr;
     addr.reset();
-    std::bitset<32> index(block_set);
+    addr_t index(block_set);
 
-    auto fill_tag_bit = [_c = this](std::bitset<32> &dst_addr,
-                                    const ulint block_set) {
+    auto fill_tag_bit = [_c = this](addr_t &dst_addr, const ulint block_set) {
         for (uint i = 31, j = 28; i > (31ul - _c->_bit_tag); --i, --j) {
             dst_addr[i] = _c->_cache[block_set][j];
         }
@@ -232,11 +231,9 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
             addr[i] = index[j];
         }
         fill_tag_bit(addr, block_set);
-
         break;
     case full_associative:
         fill_tag_bit(addr, block_set);
-
         break;
     case set_associative:
         for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_set);
@@ -244,14 +241,13 @@ std::bitset<32> Cache::_CvtToAddr(const ulint block_set) {
             addr[i] = index[j];
         }
         fill_tag_bit(addr, block_set);
-
         break;
     }
 
     return addr;
 }
 
-void Cache::Ready(const std::bitset<32> &addr) {
+void Cache::Ready(const addr_t &addr) {
     _current_addr = addr;
     _current_block = 0;
     _current_set = 0;
@@ -289,7 +285,7 @@ void Cache::_Update() {
     }
 }
 
-void Cache::_WriteToBlock(const std::bitset<32> &addr) {
+void Cache::_WriteToBlock(const addr_t &addr) {
     for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
         _cache[_current_block][j] = addr[i];
         assert(j >= 0);
@@ -297,8 +293,8 @@ void Cache::_WriteToBlock(const std::bitset<32> &addr) {
     _cache[_current_block][30] = true;
 }
 
-ulint Cache::_GetCacheIndex(const std::bitset<32> &addr) {
-    std::bitset<32> temp_cache_line;
+ulint Cache::_GetCacheIndex(const addr_t &addr) {
+    addr_t temp_cache_line;
     temp_cache_line.reset();
     if (_cache_setting.associativity == set_associative) {
         for (ulint i = (_bit_block), j = 0; i < (_bit_block + _bit_set);
@@ -314,8 +310,7 @@ ulint Cache::_GetCacheIndex(const std::bitset<32> &addr) {
     return temp_cache_line.to_ulong();
 }
 
-bool Cache::_CheckIdent(const std::bitset<32> &cache,
-                        const std::bitset<32> &addr) {
+bool Cache::_CheckIdent(const addr_t &cache, const addr_t &addr) {
     for (uint i = 31, j = 28; i > (31ul - _bit_tag); --i, --j) {
         if (addr[i] != cache[j]) {
             return false;
@@ -335,25 +330,22 @@ void Cache::GetBlockByRandom() {
     case full_associative:
         _current_block = static_cast<ulint>(
             unif(generator) / (INT32_MAX / _cache_setting.num_block + 1));
-
         break;
 
     case set_associative:
         ulint temp = static_cast<ulint>(
             unif(generator) / (INT32_MAX / _cache_setting.cache_sets + 1));
         _current_block = _current_set * _cache_setting.cache_sets + temp;
-
         break;
     }
 }
 
 bool Cache::_IfBlockAvailable() { return _has_space; }
 
-void Cache::_LRUHitHandle() {}
-
-ulint Cache::GetBlockByLRU() {
+void Cache::_LRUHitHandle() {
     // TODO: Your part 1 assignment
-    ulint res(0);
+}
 
-    return res;
+void Cache::GetBlockByLRU() {
+    // TODO: Your part 1 assignment
 }
