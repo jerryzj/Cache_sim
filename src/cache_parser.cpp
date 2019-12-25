@@ -27,8 +27,7 @@ void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest) {
     }
     auto _cache_array = cache_conf["content"];
 
-    for (json::iterator it = _cache_array.begin(); it < _cache_array.end();
-         it++) {
+    for (auto it = _cache_array.begin(); it < _cache_array.end(); ++it) {
         CACHE_SET _c;
         // TODO: block size constraint
         try {
@@ -58,7 +57,7 @@ void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest) {
                           << _str << std::endl;
                 exit(-1);
             }
-        } catch (json::type_error &e) {
+        } catch (const json::type_error &e) {
             std::cout << "message: " << e.what() << '\n'
                       << "exception id: " << e.id << std::endl;
         }

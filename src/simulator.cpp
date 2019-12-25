@@ -24,7 +24,7 @@ void Simulator::RunSimulation() {
             if (!is_success) {
                 throw std::logic_error("Cache Handler failed");
             }
-        } catch (std::exception &ex) {
+        } catch (const std::exception &ex) {
             std::cerr << ex.what() << std::endl;
             exit(-1);
         }
