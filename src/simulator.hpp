@@ -35,25 +35,23 @@ class Simulator {
 
   private:
     std::unique_ptr<InstructionLoader> inst_loader;
-    std::unique_ptr<Cache> main_cache;
+    std::vector<Cache> _cache_hierarchy_list;
     const std::string &cache_cfg_file;
     const std::string &trace_file;
-    bool _has_victim;
-    std::vector<CACHE_SET> _cache_list;
+
+    std::vector<CACHE_SET> _cache_setting_list;
     COUNTER _counter; // Runtime statistics
 
     bool _CacheHandler(inst_t inst); // Main Instruction processing
     uint64_t _GetCacheIndex(const std::bitset<32> &addr); // Get index of block
-    bool _CheckIdent(const std::bitset<32> &cache, const std::bitset<32> &addr);
     // Check whether current address is in certain cache block
     void _Load(const addr_t &addr);
     void _Store(const addr_t &addr);
-    void _CalHitRate();                         // Caculate hit rate
-    bool _IsHit(const std::bitset<32> &addr);   // Data is hit/miss
-    void _Read(const std::bitset<32> &addr);    // Read data from memory
-    void _Drop();                               // Write data to memory
-    void _Replace(const std::bitset<32> &addr); // Replace cache block
-    void _ShowSettingInfo(const CACHE_SET &setting);
+    bool _IsHit(const std::bitset<32> &addr); // Data is hit/miss
+
+    void _CalHitRate(); // Caculate hit rate
+    void _DumpCACTIConfig(const std::string &, const CACHE_SET &);
+    void _ShowSettingInfo(Cache &_cache);
 };
 
 #endif

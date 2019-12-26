@@ -21,7 +21,7 @@ class Cache {
     ~Cache();
 
     bool IsHit();
-
+    CACHE_SET GetCacheSetting() { return _cache_setting; }
     friend class Simulator;
 
   protected:
