@@ -60,11 +60,11 @@ bool Simulator::_CacheHandler(inst_t inst) {
 }
 
 void Simulator::_Load(const addr_t &addr) {
-    bool _is_hit(false);
     ++_counter.access;
     ++_counter.load;
 
     if (_multi_level) {
+        bool _is_hit(false);
         for (auto _cache = _cache_hierarchy_list.begin();
              _cache != _cache_hierarchy_list.end() && !_is_hit; ++_cache) {
             if (_cache->Get(addr)) {
@@ -78,22 +78,20 @@ void Simulator::_Load(const addr_t &addr) {
         }
     } else {
         if (_cache_hierarchy_list[0].Get(addr)) {
-            _is_hit = true;
             ++_counter.load_hit;
             ++_counter.hit_in_main;
         } else {
-            _is_hit = false;
             _cache_hierarchy_list[0].Set(addr);
         }
     }
 }
 
 void Simulator::_Store(const addr_t &addr) {
-    bool _is_hit(false);
     ++_counter.access;
     ++_counter.store;
 
     if (_multi_level) {
+        bool _is_hit(false);
         for (auto _cache = _cache_hierarchy_list.begin();
              _cache != _cache_hierarchy_list.end() && !_is_hit; ++_cache) {
             if (_cache->Get(addr)) {
@@ -107,11 +105,9 @@ void Simulator::_Store(const addr_t &addr) {
         }
     } else {
         if (_cache_hierarchy_list[0].Get(addr)) {
-            _is_hit = true;
             ++_counter.store_hit;
             ++_counter.hit_in_main;
         } else {
-            _is_hit = false;
             _cache_hierarchy_list[0].Set(addr);
         }
     }

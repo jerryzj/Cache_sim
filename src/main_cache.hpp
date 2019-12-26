@@ -3,7 +3,7 @@
 
 class MainCache : public BaseCache {
   public:
-    MainCache(const CACHE_SET &);
+    explicit MainCache(const CACHE_SET &);
     ~MainCache();
     bool Get(const addr_t &);
     bool Set(const addr_t &);
