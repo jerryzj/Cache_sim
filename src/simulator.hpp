@@ -1,10 +1,11 @@
 #ifndef _SIMULATOR_HPP_
 #define _SIMULATOR_HPP_
 
-#include "cache.hpp"
 #include "config_parser.hpp"
 #include "loader.hpp"
+#include "main_cache.hpp"
 #include <cstdint>
+#include <iomanip>
 #include <memory>
 
 struct COUNTER {
@@ -27,31 +28,33 @@ struct COUNTER {
 
 class Simulator {
   public:
-    explicit Simulator(const std::string &cache_cfg,
-                       const std::string &program_trace);
+    explicit Simulator(std::vector<CACHE_SET> &cache_cfg_list,
+                       const std::string &program_trace,
+                       const bool multi_level_mode);
     ~Simulator();
     void RunSimulation();
     void DumpResult(bool oneline); // Print simulation result
 
   private:
     std::unique_ptr<InstructionLoader> inst_loader;
-    std::vector<Cache> _cache_hierarchy_list;
-    const std::string &cache_cfg_file;
+    std::vector<MainCache> _cache_hierarchy_list;
+    const bool _multi_level;
     const std::string &trace_file;
+
+    void _SetupCache(std::vector<CACHE_SET> &_cfg_list);
 
     std::vector<CACHE_SET> _cache_setting_list;
     COUNTER _counter; // Runtime statistics
 
     bool _CacheHandler(inst_t inst); // Main Instruction processing
-    uint64_t _GetCacheIndex(const std::bitset<32> &addr); // Get index of block
     // Check whether current address is in certain cache block
     void _Load(const addr_t &addr);
     void _Store(const addr_t &addr);
-    bool _IsHit(const std::bitset<32> &addr); // Data is hit/miss
 
     void _CalHitRate(); // Caculate hit rate
-    void _DumpCACTIConfig(const std::string &, const CACHE_SET &);
-    void _ShowSettingInfo(Cache &_cache);
+
+    void _ShowSettingInfo();
+    void _ShowSettingInfo(MainCache &_cache);
 };
 
 #endif

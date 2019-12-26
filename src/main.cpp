@@ -22,9 +22,14 @@ int main(int argc, char **argv) {
 
     std::string config_path = parser.get<std::string>("c");
     std::string trace_path = parser.get<std::string>("t");
+    std::vector<CACHE_SET> cache_setting_list;
 
-    Simulator simulator(config_path, trace_path);
+    bool is_multi_level(false);
+    ParseCacheConfig(config_path.c_str(), cache_setting_list, is_multi_level);
+
+    Simulator simulator(cache_setting_list, trace_path, is_multi_level);
     simulator.RunSimulation();
+
     if (parser.exists("one-line"))
         simulator.DumpResult(true);
     else

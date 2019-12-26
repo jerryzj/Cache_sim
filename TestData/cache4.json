@@ -1,4 +1,5 @@
 {
+    "multi-level": true,
     "content": [
         {
             "cache-size": 8,

@@ -8,5 +8,6 @@
 #include <string>
 #include <vector>
 
-void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest);
+void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest,
+                      bool &is_multi_level);
 #endif

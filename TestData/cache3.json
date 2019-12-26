@@ -1,5 +1,5 @@
 {
-    "hierarchy-levels": 1,
+    "multi-level": false,
     "content": [
         {
             "cache-size": 8,

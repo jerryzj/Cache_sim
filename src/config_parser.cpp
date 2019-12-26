@@ -2,7 +2,8 @@
 
 using json = nlohmann::json;
 
-void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest) {
+void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest,
+                      bool &is_multi_level) {
     json cache_conf;
     std::ifstream file;
     try {
@@ -26,6 +27,9 @@ void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest) {
                   << "exception id: " << e.id << '\n'
                   << "byte position of error: " << e.byte << std::endl;
     }
+
+    is_multi_level = cache_conf["multi-level"];
+
     auto _cache_array = cache_conf["content"];
 
     for (auto it = _cache_array.begin(); it < _cache_array.end(); ++it) {
@@ -41,7 +45,7 @@ void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest) {
                 _c.associativity = full_associative;
             else if (_str == "set-associative") {
                 _c.associativity = set_associative;
-                _c.cache_sets = (*it)["number-of-way"];
+                _c.num_way = (*it)["number-of-way"];
             } else {
                 std::cerr << "Unknown associativity of cache:" << '\n'
                           << _str << std::endl;

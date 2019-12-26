@@ -1,16 +1,26 @@
 #include "simulator.hpp"
 
-Simulator::Simulator(const std::string &cache_cfg,
-                     const std::string &program_trace)
-    : cache_cfg_file(cache_cfg), trace_file(program_trace) {
-    ParseCacheConfig(cache_cfg_file.c_str(), this->_cache_setting_list);
+Simulator::Simulator(std::vector<CACHE_SET> &cache_cfg_list,
+                     const std::string &program_trace,
+                     const bool multi_level_mode = false)
+    : _multi_level(multi_level_mode), trace_file(program_trace) {
 
-    _cache_hierarchy_list.push_back(Cache(_cache_setting_list[0]));
+    _SetupCache(cache_cfg_list);
 
     inst_loader = std::make_unique<InstructionLoader>(trace_file);
 }
 
 Simulator::~Simulator() = default;
+
+void Simulator::_SetupCache(std::vector<CACHE_SET> &_cfg_list) {
+    if (_multi_level) {
+        for (auto it = _cfg_list.begin(); it != _cfg_list.end(); ++it) {
+            _cache_hierarchy_list.push_back(MainCache(*it));
+        }
+    } else {
+        _cache_hierarchy_list.push_back(MainCache(_cfg_list[0]));
+    }
+}
 
 void Simulator::RunSimulation() {
     while (inst_loader->IfAvailable()) {
@@ -29,7 +39,6 @@ void Simulator::RunSimulation() {
 
 bool Simulator::_CacheHandler(inst_t inst) {
     addr_t next_addr = Cvt2AddrBits(inst.addr_raw);
-    this->_cache_hierarchy_list[0].Ready(next_addr);
 
     // Determine what kind of the instruction
     switch (inst.op) {
@@ -50,43 +59,61 @@ bool Simulator::_CacheHandler(inst_t inst) {
     return true;
 }
 
-void Simulator::_CalHitRate() {
-    assert(_counter.access != 0);
-    assert(_counter.load != 0);
-    assert(_counter.store != 0);
-    _counter.hit = _counter.hit_in_main;
-    _counter.avg_hit_rate = static_cast<double>(_counter.hit) / _counter.access;
-    _counter.load_hit_rate =
-        static_cast<double>(_counter.load_hit) / _counter.load;
-    _counter.store_hit_rate =
-        static_cast<double>(_counter.store_hit) / _counter.store;
-}
-
-bool Simulator::_IsHit(const addr_t &addr) {
-    return this->_cache_hierarchy_list[0]._IsHit(addr);
-}
-
 void Simulator::_Load(const addr_t &addr) {
+    bool _is_hit(false);
     ++_counter.access;
     ++_counter.load;
 
-    if (_IsHit(addr)) {
-        ++_counter.load_hit;
-        ++_counter.hit_in_main;
+    if (_multi_level) {
+        for (auto _cache = _cache_hierarchy_list.begin();
+             _cache != _cache_hierarchy_list.end() && !_is_hit; ++_cache) {
+            if (_cache->Get(addr)) {
+                _is_hit = true;
+                ++_counter.load_hit;
+                ++_counter.hit_in_main;
+            } else {
+                _is_hit = false;
+                _cache->Set(addr);
+            }
+        }
     } else {
-        this->_cache_hierarchy_list[0]._Read(addr);
+        if (_cache_hierarchy_list[0].Get(addr)) {
+            _is_hit = true;
+            ++_counter.load_hit;
+            ++_counter.hit_in_main;
+        } else {
+            _is_hit = false;
+            _cache_hierarchy_list[0].Set(addr);
+        }
     }
 }
 
 void Simulator::_Store(const addr_t &addr) {
+    bool _is_hit(false);
     ++_counter.access;
     ++_counter.store;
 
-    if (_IsHit(addr)) {
-        ++_counter.store_hit;
-        ++_counter.hit_in_main;
+    if (_multi_level) {
+        for (auto _cache = _cache_hierarchy_list.begin();
+             _cache != _cache_hierarchy_list.end() && !_is_hit; ++_cache) {
+            if (_cache->Get(addr)) {
+                _is_hit = true;
+                ++_counter.store_hit;
+                ++_counter.hit_in_main;
+            } else {
+                _is_hit = false;
+                _cache->Set(addr);
+            }
+        }
     } else {
-        this->_cache_hierarchy_list[0]._Read(addr);
+        if (_cache_hierarchy_list[0].Get(addr)) {
+            _is_hit = true;
+            ++_counter.store_hit;
+            ++_counter.hit_in_main;
+        } else {
+            _is_hit = false;
+            _cache_hierarchy_list[0].Set(addr);
+        }
     }
 }
 
@@ -100,10 +127,7 @@ void Simulator::DumpResult(bool oneline) {
         std::cout << "Test file: " << this->trace_file << std::endl;
 
         std::cout << "===================================" << std::endl;
-        std::cout << "┌-------------------┐" << std::endl;
-        std::cout << "│  Primary Cache    │" << std::endl;
-        std::cout << "└-------------------┘" << std::endl;
-        _ShowSettingInfo(this->_cache_hierarchy_list[0]);
+        _ShowSettingInfo();
         std::cout << "===================================" << std::endl;
 
         std::cout << "Number of cache access: " << _counter.access << std::endl;
@@ -116,28 +140,38 @@ void Simulator::DumpResult(bool oneline) {
     }
 }
 
-void Simulator::_ShowSettingInfo(Cache &_cache) {
-    CACHE_SET _cfg = _cache.GetCacheSetting();
+void Simulator::_ShowSettingInfo() {
+    for (std::size_t i = 0; i < _cache_hierarchy_list.size(); i++) {
+        std::cout << "# L" << i + 1 << " Cache" << std::endl;
+        _ShowSettingInfo(_cache_hierarchy_list[i]);
+        if (i != _cache_hierarchy_list.size() - 1)
+            std::cout << "-----------------------------------" << std::endl;
+    }
+}
 
-    std::cout << "Cache size: " << _cfg.cache_size << "KB" << std::endl;
+void Simulator::_ShowSettingInfo(MainCache &_cache) {
+    CachePropertyStruct _property = _cache.GetProperty();
 
-    std::cout << "Cache block size: " << _cfg.block_size << "B" << std::endl;
-    switch (_cfg.associativity) {
+    std::cout << "Cache size: " << _property._cache_size << "KB" << std::endl;
+
+    std::cout << "Cache block size: " << _property._block_size << "B"
+              << std::endl;
+    switch (_property.associativity) {
     case direct_mapped:
-        std::cout << "Associativity: direct_mapped" << std::endl;
+        std::cout << "Associativity: direct-mapped" << std::endl;
         break;
     case set_associative:
-        std::cout << "Associativity: " << _cfg.cache_sets
+        std::cout << "Associativity: " << _property._num_way
                   << "-way set_associative" << std::endl;
         break;
     case full_associative:
-        std::cout << "Associativity: fully_associative" << std::endl;
+        std::cout << "Associativity: full-associative" << std::endl;
         break;
     default:
         std::cerr << "Error associtivity setting" << std::endl;
         exit(-1);
     }
-    switch (_cfg.replacement_policy) {
+    switch (_property.replacement_policy) {
     case NONE:
         std::cout << "Replacement policy: None" << std::endl;
         break;
@@ -151,4 +185,16 @@ void Simulator::_ShowSettingInfo(Cache &_cache) {
         std::cerr << "Error replacement setting" << std::endl;
         exit(-1);
     }
+}
+
+void Simulator::_CalHitRate() {
+    assert(_counter.access != 0);
+    assert(_counter.load != 0);
+    assert(_counter.store != 0);
+    _counter.hit = _counter.hit_in_main;
+    _counter.avg_hit_rate = static_cast<double>(_counter.hit) / _counter.access;
+    _counter.load_hit_rate =
+        static_cast<double>(_counter.load_hit) / _counter.load;
+    _counter.store_hit_rate =
+        static_cast<double>(_counter.store_hit) / _counter.store;
 }
