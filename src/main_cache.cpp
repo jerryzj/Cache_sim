@@ -45,8 +45,8 @@ bool MainCache::IsHit(const addr_t &addr) {
     ulint idx(0);
     bool identical(true);
 
-    auto check_ident = [&](const ulint idx, const uint _bit_tag,
-                           const addr_t lhs, const addr_t rhs[]) -> bool {
+    auto check_ident = [](const ulint &idx, const uint &_bit_tag,
+                          const addr_t &lhs, const addr_t rhs[]) -> bool {
         for (uint j = 31, k = 28; j > (31 - _bit_tag); j--, k--) {
             if (lhs[j] != rhs[idx][k]) {
                 return false;
