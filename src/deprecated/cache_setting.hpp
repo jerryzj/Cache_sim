@@ -1,0 +1,4 @@
+#ifndef CACHE_SETTING_HPP
+#define CACHE_SETTING_HPP
+
+#endif
