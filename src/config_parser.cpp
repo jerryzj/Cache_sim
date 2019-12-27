@@ -2,7 +2,8 @@
 
 using json = nlohmann::json;
 
-void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest,
+void ParseCacheConfig(const char *filename,
+                      std::vector<CachePropertyStruct> &dest,
                       bool &is_multi_level) {
     json cache_conf;
     std::ifstream file;
@@ -33,11 +34,11 @@ void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest,
     auto _cache_array = cache_conf["content"];
 
     for (auto it = _cache_array.begin(); it < _cache_array.end(); ++it) {
-        CACHE_SET _c;
+        CachePropertyStruct _c;
         // TODO: block size constraint
         try {
-            _c.cache_size = (*it)["cache-size"];
-            _c.block_size = (*it)["block-size"];
+            _c._cache_size = (*it)["cache-size"];
+            _c._block_size = (*it)["block-size"];
             std::string _str((*it)["associativity"]);
             if (_str == "direct-mapped")
                 _c.associativity = direct_mapped;
@@ -45,7 +46,7 @@ void ParseCacheConfig(const char *filename, std::vector<CACHE_SET> &dest,
                 _c.associativity = full_associative;
             else if (_str == "set-associative") {
                 _c.associativity = set_associative;
-                _c.num_way = (*it)["number-of-way"];
+                _c._num_way = (*it)["number-of-way"];
             } else {
                 std::cerr << "Unknown associativity of cache:" << '\n'
                           << _str << std::endl;

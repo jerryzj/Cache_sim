@@ -1,32 +1,14 @@
 #ifndef BASECACHE_HPP
 #define BASECACHE_HPP
 
-#include "cache_setting.hpp"
 #include "datatype.hpp"
 #include <cmath>
 #define MAX_LINE 65536
 
-struct CachePropertyStruct {
-    MAPPING_P associativity;
-    REPL_P replacement_policy;
-    WRITE_P write_policy;
-
-    uint _cache_size;
-    uint _block_size;
-    uint _bit_offset; // # of bits of offset
-    uint _bit_index;  // # of bits of index
-    uint _bit_set;    // # of bits of set
-    uint _bit_tag;    // # of bits of tag
-
-    uint _num_block; // # of blocks
-    uint _num_way;   // N-way
-    uint _num_set;   // # of sets
-};
-
 class BaseCache {
   public:
     BaseCache();
-    BaseCache(const CACHE_SET &);
+    BaseCache(const CachePropertyStruct &);
     virtual ~BaseCache() = default;
 
     virtual bool Get(const addr_t &) = 0;

@@ -23,4 +23,47 @@ struct inst_t {
     inst_t() : op(I_NONE), addr_raw(0) {}
 };
 
+enum MappingPolicies {
+    // Cache block mapping policies
+    direct_mapped,
+    set_associative,
+    full_associative
+};
+
+enum ReplacePolicies {
+    // Cache replacement policies
+    NONE,
+    RANDOM,
+    LRU
+};
+
+enum WritePolicies {
+    // Cache write policies
+    write_back
+};
+
+struct CachePropertyStruct {
+    MappingPolicies associativity;
+    ReplacePolicies replacement_policy;
+    WritePolicies write_policy;
+
+    ulint _cache_size;
+    ulint _block_size;
+
+    ulint _bit_offset; // # of bits of offset
+    ulint _bit_index;  // # of bits of index
+    ulint _bit_set;    // # of bits of set
+    ulint _bit_tag;    // # of bits of tag
+
+    ulint _num_block; // # of blocks
+    ulint _num_way;   // N-way
+    ulint _num_set;   // # of sets
+
+    CachePropertyStruct()
+        : associativity(direct_mapped), replacement_policy(NONE),
+          write_policy(write_back), _cache_size(0), _block_size(0),
+          _bit_offset(0), _bit_index(0), _bit_set(0), _bit_tag(0),
+          _num_block(0), _num_way(0), _num_set(0) {}
+};
+
 #endif

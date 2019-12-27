@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
     std::string config_path = parser.get<std::string>("c");
     std::string trace_path = parser.get<std::string>("t");
-    std::vector<CACHE_SET> cache_setting_list;
+    std::vector<CachePropertyStruct> cache_setting_list;
 
     bool is_multi_level(false);
     ParseCacheConfig(config_path.c_str(), cache_setting_list, is_multi_level);

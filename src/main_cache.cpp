@@ -1,9 +1,7 @@
 #include "main_cache.hpp"
 
-MainCache::MainCache(const CACHE_SET &setting) : BaseCache(setting) {
-    property.associativity = setting.associativity;
-    property.write_policy = setting.write_policy;
-    property._num_block = (setting.cache_size << 10) / setting.block_size;
+MainCache::MainCache(const CachePropertyStruct &setting) : BaseCache(setting) {
+    property._num_block = (setting._cache_size << 10) / setting._block_size;
 
     switch (property.associativity) {
     case full_associative:
@@ -19,7 +17,7 @@ MainCache::MainCache(const CACHE_SET &setting) : BaseCache(setting) {
         break;
     case set_associative:
         property._bit_index = 0;
-        property._num_way = setting.num_way;
+        property._num_way = setting._num_way;
         property._num_set = property._num_block / property._num_way;
         property._bit_set = log2(property._num_set - 1);
         break;
