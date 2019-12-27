@@ -30,8 +30,9 @@ MainCache::~MainCache() = default;
 
 bool MainCache::Get(const addr_t &addr) {
     bool res = IsHit(addr);
-    if (res)
+    if (res) {
         _HitHandle(addr);
+    }
     return res;
 }
 
@@ -42,56 +43,54 @@ bool MainCache::Set(const addr_t &addr) {
 
 bool MainCache::IsHit(const addr_t &addr) {
     ulint idx(0);
-    switch (property.associativity) {
-    case full_associative:
-        /* Fully-Associative: search all cache block */
-        for (idx = 0; idx < property._num_block; idx++) {
-            if (_cache[idx][30]) {
-                bool identical(true);
-                for (uint j = 31, k = 28;
-                     j > (31 - property._bit_tag) && identical; j--, k--) {
-                    if (addr[j] != _cache[idx][k])
-                        identical = false;
-                }
-                if (identical)
-                    return true;
+    bool identical(true);
+
+    auto check_ident = [&](const ulint idx, const uint _bit_tag,
+                           const addr_t lhs, const addr_t rhs[]) -> bool {
+        for (uint j = 31, k = 28; j > (31 - _bit_tag); j--, k--) {
+            if (lhs[j] != rhs[idx][k]) {
+                return false;
             }
         }
+        return true;
+    };
 
+    switch (property.associativity) {
+    case full_associative:
+        // Fully-Associative: search all cache block
+        for (idx = 0; idx < property._num_block; idx++) {
+            if (_cache[idx][30]) {
+                identical = check_ident(idx, property._bit_tag, addr, _cache);
+                if (identical == true) {
+                    return true;
+                }
+            }
+        }
         break;
 
     case direct_mapped:
-        /* Directed Mapped: check the only one corresponding block */
+        // Directed Mapped: check the only one corresponding block
         idx = (addr.to_ulong() >> property._bit_offset) % property._num_block;
         if (_cache[idx][30]) {
-            for (uint j = 31, k = 28; j > (31 - property._bit_tag); j--, k--) {
-                if (addr[j] != _cache[idx][k])
-                    return false;
-            }
-            return true;
+            return check_ident(idx, property._bit_tag, addr, _cache);
         }
-
         break;
 
     case set_associative:
+        // Set Associative: Get set, then check blocks among the set
         ulint _set_num = _GetSetNumber(addr);
-
         for (idx = _set_num * property._num_way;
              idx < (_set_num + 1) * property._num_way; idx++) {
             if (_cache[idx][30]) {
-                bool identical(true);
-                for (uint j = 31, k = 28;
-                     j > (31 - property._bit_tag) && identical; j--, k--) {
-                    if (addr[j] != _cache[idx][k])
-                        identical = false;
-                }
-                if (identical)
+                identical = check_ident(idx, property._bit_tag, addr, _cache);
+                if (identical == true) {
                     return true;
+                }
             }
         }
-
         break;
     }
+
     return false;
 }
 
