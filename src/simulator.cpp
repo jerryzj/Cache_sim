@@ -120,19 +120,18 @@ void Simulator::DumpResult(const bool &oneline) {
     if (oneline) {
         std::cout << std::setprecision(6) << _counter.avg_hit_rate << std::endl;
     } else {
+        std::cout << "===================================" << std::endl;
         std::cout << "Test file: " << this->trace_file << std::endl;
-
-        std::cout << "===================================" << std::endl;
+        std::cout << "-----------------------------------" << std::endl;
         _ShowSettingInfo();
-        std::cout << "===================================" << std::endl;
-
+        std::cout << "-----------------------------------" << std::endl;
         std::cout << "Number of cache access: " << _counter.access << std::endl;
         std::cout << "Number of cache load: " << _counter.load << std::endl;
         std::cout << "Number of cache store: " << _counter.store << std::endl;
         std::cout << "Number of total cache hit: " << _counter.hit << std::endl;
-
         std::cout << "Cache hit rate: " << std::setprecision(6)
                   << _counter.avg_hit_rate << std::endl;
+        std::cout << "===================================" << std::endl;
     }
 }
 
