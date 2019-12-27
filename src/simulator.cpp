@@ -2,7 +2,7 @@
 
 Simulator::Simulator(std::vector<CACHE_SET> &cache_cfg_list,
                      const std::string &program_trace,
-                     const bool multi_level_mode = false)
+                     const bool &multi_level_mode = false)
     : _multi_level(multi_level_mode), trace_file(program_trace) {
 
     _SetupCache(cache_cfg_list);
@@ -12,7 +12,7 @@ Simulator::Simulator(std::vector<CACHE_SET> &cache_cfg_list,
 
 Simulator::~Simulator() = default;
 
-void Simulator::_SetupCache(std::vector<CACHE_SET> &_cfg_list) {
+void Simulator::_SetupCache(const std::vector<CACHE_SET> &_cfg_list) {
     if (_multi_level) {
         for (auto it = _cfg_list.begin(); it != _cfg_list.end(); ++it) {
             _cache_hierarchy_list.push_back(MainCache(*it));
@@ -37,7 +37,7 @@ void Simulator::RunSimulation() {
     _CalHitRate();
 }
 
-bool Simulator::_CacheHandler(inst_t inst) {
+bool Simulator::_CacheHandler(const inst_t &inst) {
     addr_t next_addr = Cvt2AddrBits(inst.addr_raw);
 
     // Determine what kind of the instruction
@@ -113,7 +113,7 @@ void Simulator::_Store(const addr_t &addr) {
     }
 }
 
-void Simulator::DumpResult(bool oneline) {
+void Simulator::DumpResult(const bool &oneline) {
 
     // TODO: dump simulation results to yaml file,
     //       then add another yaml parser to verify correctness.

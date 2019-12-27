@@ -4,19 +4,19 @@
 #include "config_parser.hpp"
 #include "loader.hpp"
 #include "main_cache.hpp"
-#include <cstdint>
 #include <iomanip>
 #include <memory>
+#include <vector>
 
 struct COUNTER {
-    uint64_t access;    // # of cache access
-    uint64_t load;      // # of load inst.
-    uint64_t store;     // # of store inst.
-    uint64_t space;     // # of space line
-    uint64_t hit;       // # of hit
-    uint64_t load_hit;  // # of load hit
-    uint64_t store_hit; // # of store hit
-    uint64_t hit_in_main;
+    ulint access;    // # of cache access
+    ulint load;      // # of load inst.
+    ulint store;     // # of store inst.
+    ulint space;     // # of space line
+    ulint hit;       // # of hit
+    ulint load_hit;  // # of load hit
+    ulint store_hit; // # of store hit
+    ulint hit_in_main;
     double avg_hit_rate;   // average hit rate
     double load_hit_rate;  // hit rate of loads
     double store_hit_rate; // hit rarte of stores
@@ -30,31 +30,26 @@ class Simulator {
   public:
     explicit Simulator(std::vector<CACHE_SET> &cache_cfg_list,
                        const std::string &program_trace,
-                       const bool multi_level_mode);
+                       const bool &multi_level_mode);
     ~Simulator();
     void RunSimulation();
-    void DumpResult(bool oneline); // Print simulation result
+    void DumpResult(const bool &oneline); // Print simulation result
 
   private:
-    std::unique_ptr<InstructionLoader> inst_loader;
-    std::vector<MainCache> _cache_hierarchy_list;
-    const bool _multi_level;
-    const std::string &trace_file;
-
-    void _SetupCache(std::vector<CACHE_SET> &_cfg_list);
-
-    std::vector<CACHE_SET> _cache_setting_list;
-    COUNTER _counter; // Runtime statistics
-
-    bool _CacheHandler(inst_t inst); // Main Instruction processing
-    // Check whether current address is in certain cache block
+    void _SetupCache(const std::vector<CACHE_SET> &_cfg_list);
+    bool _CacheHandler(const inst_t &inst); // Main Instruction processing
     void _Load(const addr_t &addr);
     void _Store(const addr_t &addr);
-
     void _CalHitRate(); // Caculate hit rate
-
     void _ShowSettingInfo();
     void _ShowSettingInfo(MainCache &_cache);
+
+    std::unique_ptr<InstructionLoader> inst_loader;
+    std::vector<MainCache> _cache_hierarchy_list;
+    std::vector<CACHE_SET> _cache_setting_list;
+    const bool _multi_level;
+    const std::string &trace_file;
+    COUNTER _counter;
 };
 
 #endif
