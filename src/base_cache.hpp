@@ -1,29 +1,30 @@
-#ifndef BASECACHE_HPP
-#define BASECACHE_HPP
+#ifndef _BASE_CACHE_HPP
+#define _BASE_CACHE_HPP
 
 #include "datatype.hpp"
 #include <cmath>
-#define MAX_LINE 65536
+
+const int MAX_LINE = 65536;
 
 class BaseCache {
   public:
     BaseCache();
-    BaseCache(const CachePropertyStruct &);
+    BaseCache(const CacheProperty &);
     virtual ~BaseCache() = default;
 
     virtual bool Get(const addr_t &) = 0;
     virtual bool Set(const addr_t &) = 0;
     virtual bool IsHit(const addr_t &) = 0;
 
-    CachePropertyStruct GetProperty() { return property; }
+    CacheProperty GetProperty() { return property; }
 
   protected:
     /*  [30]: valid [29]: dirty bit [28]~[0]: data
         [31]: enable*/
-    std::bitset<32> _cache[MAX_LINE];
+    addr_t _cache[MAX_LINE];
 
     // Cache properties
-    CachePropertyStruct property;
+    CacheProperty property;
 };
 
 #endif

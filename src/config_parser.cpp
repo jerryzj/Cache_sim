@@ -2,8 +2,7 @@
 
 using json = nlohmann::json;
 
-void ParseCacheConfig(const char *filename,
-                      std::vector<CachePropertyStruct> &dest,
+void ParseCacheConfig(const char *filename, std::vector<CacheProperty> &dest,
                       bool &is_multi_level) {
     json cache_conf;
     std::ifstream file;
@@ -34,7 +33,7 @@ void ParseCacheConfig(const char *filename,
     auto _cache_array = cache_conf["content"];
 
     for (auto it = _cache_array.begin(); it < _cache_array.end(); ++it) {
-        CachePropertyStruct _c;
+        CacheProperty _c;
         // TODO: block size constraint
         try {
             _c._cache_size = (*it)["cache-size"];

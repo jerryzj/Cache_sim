@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
     std::string config_path = parser.get<std::string>("c");
     std::string trace_path = parser.get<std::string>("t");
-    std::vector<CachePropertyStruct> cache_setting_list;
+    std::vector<CacheProperty> cache_setting_list;
 
     bool is_multi_level(false);
     ParseCacheConfig(config_path.c_str(), cache_setting_list, is_multi_level);
@@ -30,10 +30,11 @@ int main(int argc, char **argv) {
     Simulator simulator(cache_setting_list, trace_path, is_multi_level);
     simulator.RunSimulation();
 
-    if (parser.exists("one-line"))
+    if (parser.exists("one-line")) {
         simulator.DumpResult(true);
-    else
+    } else {
         simulator.DumpResult(false);
+    }
 
     return 0;
 }

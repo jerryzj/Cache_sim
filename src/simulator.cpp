@@ -1,6 +1,6 @@
 #include "simulator.hpp"
 
-Simulator::Simulator(std::vector<CachePropertyStruct> &cache_cfg_list,
+Simulator::Simulator(std::vector<CacheProperty> &cache_cfg_list,
                      const std::string &program_trace,
                      const bool &multi_level_mode = false)
     : _multi_level(multi_level_mode), trace_file(program_trace) {
@@ -12,7 +12,7 @@ Simulator::Simulator(std::vector<CachePropertyStruct> &cache_cfg_list,
 
 Simulator::~Simulator() = default;
 
-void Simulator::_SetupCache(const std::vector<CachePropertyStruct> &_cfg_list) {
+void Simulator::_SetupCache(const std::vector<CacheProperty> &_cfg_list) {
     if (_multi_level) {
         for (auto it = _cfg_list.begin(); it != _cfg_list.end(); ++it) {
             _cache_hierarchy_list.push_back(MainCache(*it));
@@ -145,7 +145,7 @@ void Simulator::_ShowSettingInfo() {
 }
 
 void Simulator::_ShowSettingInfo(MainCache &_cache) {
-    CachePropertyStruct _property = _cache.GetProperty();
+    CacheProperty _property = _cache.GetProperty();
 
     std::cout << "Cache size: " << _property._cache_size << "KB" << std::endl;
 

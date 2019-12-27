@@ -28,7 +28,7 @@ struct COUNTER {
 
 class Simulator {
   public:
-    explicit Simulator(std::vector<CachePropertyStruct> &cache_cfg_list,
+    explicit Simulator(std::vector<CacheProperty> &cache_cfg_list,
                        const std::string &program_trace,
                        const bool &multi_level_mode);
     ~Simulator();
@@ -36,7 +36,7 @@ class Simulator {
     void DumpResult(const bool &oneline); // Print simulation result
 
   private:
-    void _SetupCache(const std::vector<CachePropertyStruct> &_cfg_list);
+    void _SetupCache(const std::vector<CacheProperty> &_cfg_list);
     bool _CacheHandler(const inst_t &inst); // Main Instruction processing
     void _Load(const addr_t &addr);
     void _Store(const addr_t &addr);

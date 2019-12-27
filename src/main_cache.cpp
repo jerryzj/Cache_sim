@@ -1,6 +1,6 @@
 #include "main_cache.hpp"
 
-MainCache::MainCache(const CachePropertyStruct &setting) : BaseCache(setting) {
+MainCache::MainCache(const CacheProperty &setting) : BaseCache(setting) {
     property._num_block = (setting._cache_size << 10) / setting._block_size;
 
     switch (property.associativity) {

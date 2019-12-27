@@ -21,8 +21,9 @@ void InstructionLoader::LoadTraceFile(const std::string &filename) {
 inst_t InstructionLoader::GetNextInst() {
     const int LENGTH_OF_INST_LINE = 13;
     char trace_line[13];
-    if (IfAvailable())
+    if (IfAvailable()) {
         in_file->getline(trace_line, LENGTH_OF_INST_LINE);
+    }
 
     return _ParseLineToInst(trace_line);
 }

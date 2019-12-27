@@ -11,16 +11,14 @@ using addr_t = std::bitset<32>;
 
 inline addr_raw_t Cvt2AddrRaw(addr_t addr) { return addr.to_ullong(); }
 
-inline addr_t Cvt2AddrBits(addr_raw_t raw_addr) {
-    return std::bitset<32>(raw_addr);
-}
+inline addr_t Cvt2AddrBits(addr_raw_t raw_addr) { return addr_t(raw_addr); }
 
 enum INST_OP { I_LOAD, I_STORE, I_NONE };
 
 struct inst_t {
     INST_OP op;
     addr_raw_t addr_raw;
-    inst_t() : op(I_NONE), addr_raw(0) {}
+    explicit inst_t() : op(I_NONE), addr_raw(0) {}
 };
 
 enum MappingPolicies {
@@ -42,7 +40,7 @@ enum WritePolicies {
     write_back
 };
 
-struct CachePropertyStruct {
+struct CacheProperty {
     MappingPolicies associativity;
     ReplacePolicies replacement_policy;
     WritePolicies write_policy;
@@ -59,7 +57,7 @@ struct CachePropertyStruct {
     ulint _num_way;   // N-way
     ulint _num_set;   // # of sets
 
-    CachePropertyStruct()
+    explicit CacheProperty()
         : associativity(direct_mapped), replacement_policy(NONE),
           write_policy(write_back), _cache_size(0), _block_size(0),
           _bit_offset(0), _bit_index(0), _bit_set(0), _bit_tag(0),
