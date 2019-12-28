@@ -36,6 +36,7 @@ bool MainCache::Get(const addr_t &addr) {
 
 bool MainCache::Set(const addr_t &addr) {
     _Replace(addr);
+    _HitHandle(addr);
     return true;
 }
 
