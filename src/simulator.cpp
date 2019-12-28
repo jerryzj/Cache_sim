@@ -117,6 +117,7 @@ void Simulator::DumpResult(const bool &oneline) {
 
     // TODO: dump simulation results to yaml file,
     //       then add another yaml parser to verify correctness.
+
     if (oneline) {
         std::cout << std::setprecision(6) << _counter.avg_hit_rate << std::endl;
     } else {
@@ -131,6 +132,8 @@ void Simulator::DumpResult(const bool &oneline) {
         std::cout << "Number of total cache hit: " << _counter.hit << std::endl;
         std::cout << "Cache hit rate: " << std::setprecision(6)
                   << _counter.avg_hit_rate << std::endl;
+        std::cout << "Average Memory Access Time: " << std::setprecision(4)
+                  << _counter.amat << " cycles" << std::endl;
         std::cout << "===================================" << std::endl;
     }
 }
@@ -183,6 +186,7 @@ void Simulator::_ShowSettingInfo(MainCache &_cache) {
 }
 
 void Simulator::_CalHitRate() {
+    const int miss_penalty(100);
     assert(_counter.access != 0);
     assert(_counter.load != 0);
     assert(_counter.store != 0);
@@ -192,4 +196,5 @@ void Simulator::_CalHitRate() {
         static_cast<double>(_counter.load_hit) / _counter.load;
     _counter.store_hit_rate =
         static_cast<double>(_counter.store_hit) / _counter.store;
+    _counter.amat = 1 + (1.0 - _counter.avg_hit_rate) * miss_penalty;
 }
