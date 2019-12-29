@@ -70,7 +70,6 @@ void Simulator::_Load(const addr_t &addr) {
             if (_cache->Get(addr)) {
                 _is_hit = true;
                 ++_counter.load_hit;
-                ++_counter.hit_in_main;
             } else {
                 _is_hit = false;
                 _cache->Set(addr);
@@ -79,7 +78,6 @@ void Simulator::_Load(const addr_t &addr) {
     } else {
         if (_cache_hierarchy_list[0].Get(addr)) {
             ++_counter.load_hit;
-            ++_counter.hit_in_main;
         } else {
             _cache_hierarchy_list[0].Set(addr);
         }
@@ -97,7 +95,6 @@ void Simulator::_Store(const addr_t &addr) {
             if (_cache->Get(addr)) {
                 _is_hit = true;
                 ++_counter.store_hit;
-                ++_counter.hit_in_main;
             } else {
                 _is_hit = false;
                 _cache->Set(addr);
@@ -106,7 +103,6 @@ void Simulator::_Store(const addr_t &addr) {
     } else {
         if (_cache_hierarchy_list[0].Get(addr)) {
             ++_counter.store_hit;
-            ++_counter.hit_in_main;
         } else {
             _cache_hierarchy_list[0].Set(addr);
         }
@@ -190,7 +186,7 @@ void Simulator::_CalHitRate() {
     assert(_counter.access != 0);
     assert(_counter.load != 0);
     assert(_counter.store != 0);
-    _counter.hit = _counter.hit_in_main;
+    _counter.hit = _counter.store_hit + _counter.load_hit;
     _counter.avg_hit_rate = static_cast<double>(_counter.hit) / _counter.access;
     _counter.load_hit_rate =
         static_cast<double>(_counter.load_hit) / _counter.load;

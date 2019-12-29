@@ -16,14 +16,14 @@ struct COUNTER {
     ulint hit;       // # of hit
     ulint load_hit;  // # of load hit
     ulint store_hit; // # of store hit
-    ulint hit_in_main;
+
     double avg_hit_rate;   // average hit rate
     double load_hit_rate;  // hit rate of loads
     double store_hit_rate; // hit rarte of stores
     double amat;           // AMAT in cycles
     explicit COUNTER()
         : access(0), load(0), store(0), space(0), hit(0), load_hit(0),
-          store_hit(0), hit_in_main(0), avg_hit_rate(0.0), load_hit_rate(0.0),
+          store_hit(0), avg_hit_rate(0.0), load_hit_rate(0.0),
           store_hit_rate(0.0), amat(0.0) {}
 };
 
