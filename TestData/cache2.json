@@ -6,7 +6,7 @@
             "block-size": 32,
             "associativity": "set-associative",
             "number-of-way": 4,
-            "replacement-policy": "random"
+            "replacement-policy": "LRU"
         }
     ]
 }
