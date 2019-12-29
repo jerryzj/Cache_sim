@@ -21,9 +21,8 @@ void InstructionLoader::LoadTraceFile(const std::string &filename) {
 inst_t InstructionLoader::GetNextInst() {
     const int LENGTH_OF_INST_LINE = 13;
     char trace_line[13];
-    if (IfAvailable()) {
-        in_file->getline(trace_line, LENGTH_OF_INST_LINE);
-    }
+
+    in_file->getline(trace_line, LENGTH_OF_INST_LINE);
 
     return _ParseLineToInst(trace_line);
 }
@@ -37,21 +36,18 @@ inst_t InstructionLoader::_ParseLineToInst(const char *line) {
     res_inst.addr_raw = addr;
     switch (line[0]) {
     case 'l':
-        // TODO: add statistics
         res_inst.op = I_LOAD;
         break;
     case 's':
-        // TODO: add statistics
         res_inst.op = I_STORE;
         break;
     case '\0':
-        // TODO: add statistics
         res_inst.op = I_NONE;
         break;
     default:
         std::cerr << "Undefined instruction type." << std::endl;
         std::cerr << "Error line: " << line << std::endl;
-        res_inst.op = I_NONE;
+        exit(-1);
     }
     return res_inst;
 }
