@@ -24,7 +24,7 @@ struct COUNTER {
     explicit COUNTER()
         : access(0), load(0), store(0), space(0), hit(0), load_hit(0),
           store_hit(0), hit_in_main(0), avg_hit_rate(0.0), load_hit_rate(0.0),
-          store_hit_rate(0.0) {}
+          store_hit_rate(0.0) ,amat(0.0) {}
 };
 
 class Simulator {
