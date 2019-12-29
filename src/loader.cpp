@@ -36,21 +36,18 @@ inst_t InstructionLoader::_ParseLineToInst(const char *line) {
     res_inst.addr_raw = addr;
     switch (line[0]) {
     case 'l':
-        // TODO: add statistics
         res_inst.op = I_LOAD;
         break;
     case 's':
-        // TODO: add statistics
         res_inst.op = I_STORE;
         break;
     case '\0':
-        // TODO: add statistics
         res_inst.op = I_NONE;
         break;
     default:
         std::cerr << "Undefined instruction type." << std::endl;
         std::cerr << "Error line: " << line << std::endl;
-        res_inst.op = I_NONE;
+        exit(-1);
     }
     return res_inst;
 }
