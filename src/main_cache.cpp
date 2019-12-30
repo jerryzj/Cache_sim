@@ -238,16 +238,16 @@ ulint MainCache::_GetIndexByLRU([[maybe_unused]] const addr_t &addr) {
 
         bool flag(false);
         ulint j;
-        for (ulint idx = _set_num * property._num_way;
-             idx < (_set_num + 1) * property._num_way && !flag; idx++) {
-            for (j = 0; j < _LRU_priority.size() && !flag; j++) {
-                if (_LRU_priority[j] == idx)
+        for (j = 0; j < _LRU_priority.size() && !flag; j++) {
+            for (ulint idx = _set_num * property._num_way;
+                 idx < (_set_num + 1) * property._num_way && !flag; idx++) {
+                if (_LRU_priority[j] == idx) {
                     flag = true;
+                    res = _LRU_priority[j];
+                    _LRU_priority.erase(_LRU_priority.begin() + j);
+                }
             }
         }
-
-        res = _LRU_priority[j];
-        _LRU_priority.erase(_LRU_priority.begin() + j);
 
         break;
     }
