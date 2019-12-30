@@ -11,7 +11,7 @@ MainCache::MainCache(const CacheProperty &setting) : BaseCache(setting) {
         property._bit_tag = 32 - property._bit_offset;
         break;
     case direct_mapped:
-        property._bit_index = log2(property._num_block - 1);
+        property._bit_index = log2l(property._num_block);
         property._bit_set = 0;
         property._bit_tag = 32 - property._bit_offset - property._bit_index;
         break;
@@ -19,7 +19,8 @@ MainCache::MainCache(const CacheProperty &setting) : BaseCache(setting) {
         property._bit_index = 0;
         property._num_way = setting._num_way;
         property._num_set = property._num_block / property._num_way;
-        property._bit_set = log2(property._num_set - 1);
+        property._bit_set = log2l(property._num_set);
+        property._bit_tag = 32 - property._bit_offset - property._bit_set;
         break;
     }
 }
