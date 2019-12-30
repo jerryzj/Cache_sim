@@ -19,6 +19,8 @@ class MainCache : public BaseCache {
     ulint _GetIndexByLRU(const addr_t &addr);
     ulint _GetIndexByRandom(const addr_t &addr);
     ulint _GetSetNumber(const addr_t &addr);
+
+    std::vector<ulint> _LRU_priority;
 };
 
 #endif

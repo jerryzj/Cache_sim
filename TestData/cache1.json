@@ -5,7 +5,7 @@
             "cache-size": 256,
             "block-size": 8,
             "associativity": "direct-mapped",
-            "replacement-policy": "random"
+            "replacement-policy": "lru"
         }
     ]
 }

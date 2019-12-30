@@ -104,15 +104,61 @@ void MainCache::_Replace(const addr_t &addr) {
 
 void MainCache::_HitHandle([[maybe_unused]] const addr_t &addr) {
     // # TODO
+    auto check_ident = [](const ulint &idx, const uint &_bit_tag,
+                          const addr_t &lhs, const addr_t rhs[]) -> bool {
+        for (uint j = 31, k = 28; j > (31 - _bit_tag); j--, k--) {
+            if (lhs[j] != rhs[idx][k]) {
+                return false;
+            }
+        }
+        return true;
+    };
 
-    // switch(property.associativity) {
-    // case full_associative:
+    switch (property.associativity) {
+    case full_associative: {
+        for (ulint idx = 0; idx < property._num_block; idx++) {
+            if (_cache[idx][30] &&
+                check_ident(idx, property._bit_tag, addr, _cache)) {
+                for (ulint j = 0; j < _LRU_priority.size(); j++) {
+                    if (_LRU_priority[j] == idx) {
+                        _LRU_priority.erase(_LRU_priority.begin() + j);
+                        break;
+                    }
+                }
+                _LRU_priority.push_back(idx);
+                break;
+            }
+        }
 
-    // case set_associative:
+        break;
+    }
 
-    // default:
-    //     break;
-    // }
+    case set_associative: {
+        ulint _set_num = _GetSetNumber(addr);
+
+        for (ulint idx = _set_num * property._num_way;
+             idx < (_set_num + 1) * property._num_way; idx++) {
+            if (_cache[idx][30] &&
+                check_ident(idx, property._bit_tag, addr, _cache)) {
+                for (ulint j = 0; j < _LRU_priority.size(); j++) {
+                    if (_LRU_priority[j] == idx) {
+                        _LRU_priority.erase(_LRU_priority.begin() + j);
+                        break;
+                    }
+                }
+                _LRU_priority.push_back(idx);
+                break;
+            }
+        }
+
+        break;
+    }
+
+    default: {
+
+        break;
+    }
+    }
 }
 
 ulint MainCache::_GetCacheBlockIndex(const addr_t &addr) {
@@ -166,14 +212,49 @@ ulint MainCache::_GetIndexByLRU([[maybe_unused]] const addr_t &addr) {
     ulint res(0);
     // # TODO
 
-    // switch(property.associativity) {
-    // case full_associative:
+    switch (property.associativity) {
+    case full_associative: {
+        for (ulint idx = 0; idx < property._num_block; idx++) {
+            if (!_cache[idx][30]) {
+                return idx;
+            }
+        }
+        res = _LRU_priority.front();
+        // std::cout << "after" << std::endl;
+        _LRU_priority.erase(_LRU_priority.begin());
 
-    // case set_associative:
+        break;
+    }
 
-    // default:
-    //     break;
-    // }
+    case set_associative: {
+        ulint _set_num = _GetSetNumber(addr);
+        for (ulint idx = _set_num * property._num_way;
+             idx < (_set_num + 1) * property._num_way; idx++) {
+            if (!_cache[idx][30]) {
+                return idx;
+            }
+        }
+
+        bool flag(false);
+        ulint j;
+        for (ulint idx = _set_num * property._num_way;
+             idx < (_set_num + 1) * property._num_way && !flag; idx++) {
+            for (j = 0; j < _LRU_priority.size() && !flag; j++) {
+                if (_LRU_priority[j] == idx)
+                    flag = true;
+            }
+        }
+
+        res = _LRU_priority[j];
+        _LRU_priority.erase(_LRU_priority.begin() + j);
+
+        break;
+    }
+
+    default: {
+        break;
+    }
+    }
     return res;
 }
 
