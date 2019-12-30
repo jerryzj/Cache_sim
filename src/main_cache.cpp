@@ -8,12 +8,13 @@ MainCache::MainCache(const CacheProperty &setting) : BaseCache(setting) {
         /* For fully associative, remaining bits are used for TAG*/
         property._bit_index = 0;
         property._bit_set = 0;
-        property._bit_tag = 32 - property._bit_offset;
+        property._bit_tag = ADDR_WIDTH - property._bit_offset;
         break;
     case direct_mapped:
         property._bit_index = log2(property._num_block - 1);
         property._bit_set = 0;
-        property._bit_tag = 32 - property._bit_offset - property._bit_index;
+        property._bit_tag =
+            ADDR_WIDTH - property._bit_offset - property._bit_index;
         break;
     case set_associative:
         property._bit_index = 0;
@@ -46,7 +47,8 @@ bool MainCache::IsHit(const addr_t &addr) {
 
     auto check_ident = [](const ulint &idx, const uint &_bit_tag,
                           const addr_t &lhs, const addr_t rhs[]) -> bool {
-        for (uint j = 31, k = 28; j > (31 - _bit_tag); j--, k--) {
+        for (uint j = ADDR_WIDTH - 1, k = 45; j > (ADDR_WIDTH - 1 - _bit_tag);
+             j--, k--) {
             if (lhs[j] != rhs[idx][k]) {
                 return false;
             }
@@ -58,7 +60,7 @@ bool MainCache::IsHit(const addr_t &addr) {
     case full_associative:
         // Fully-Associative: search all cache block
         for (idx = 0; idx < property._num_block; idx++) {
-            if (_cache[idx][30]) {
+            if (_cache[idx][47]) {
                 identical = check_ident(idx, property._bit_tag, addr, _cache);
                 if (identical == true) {
                     return true;
@@ -70,7 +72,7 @@ bool MainCache::IsHit(const addr_t &addr) {
     case direct_mapped:
         // Directed Mapped: check the only one corresponding block
         idx = (addr.to_ulong() >> property._bit_offset) % property._num_block;
-        if (_cache[idx][30]) {
+        if (_cache[idx][47]) {
             return check_ident(idx, property._bit_tag, addr, _cache);
         }
         break;
@@ -80,7 +82,7 @@ bool MainCache::IsHit(const addr_t &addr) {
         ulint _set_num = _GetSetNumber(addr);
         for (idx = _set_num * property._num_way;
              idx < (_set_num + 1) * property._num_way; idx++) {
-            if (_cache[idx][30]) {
+            if (_cache[idx][47]) {
                 identical = check_ident(idx, property._bit_tag, addr, _cache);
                 if (identical == true) {
                     return true;
@@ -96,10 +98,11 @@ bool MainCache::IsHit(const addr_t &addr) {
 void MainCache::_Replace(const addr_t &addr) {
     ulint idx = _GetCacheBlockIndex(addr);
 
-    for (uint j = 31, k = 28; j > (31 - property._bit_tag); j--, k--) {
+    for (uint j = ADDR_WIDTH - 1, k = 45;
+         j > (ADDR_WIDTH - 1 - property._bit_tag); j--, k--) {
         _cache[idx][k] = addr[j];
     }
-    _cache[idx][30] = true;
+    _cache[idx][47] = true;
 }
 
 void MainCache::_HitHandle([[maybe_unused]] const addr_t &addr) {
@@ -178,7 +181,7 @@ ulint MainCache::_GetIndexByLRU([[maybe_unused]] const addr_t &addr) {
 }
 
 ulint MainCache::_GetSetNumber(const addr_t &addr) {
-    std::bitset<28> _set_num;
+    std::bitset<45> _set_num;
     for (ulint i = (property._bit_offset), j = 0;
          i < (property._bit_offset + property._bit_set); ++i, ++j) {
         _set_num[j] = addr[i];

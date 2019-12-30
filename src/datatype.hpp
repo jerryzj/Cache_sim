@@ -4,10 +4,10 @@
 #include <bitset>
 #include <fstream>
 #include <iostream>
-
+#define ADDR_WIDTH 48
 using ulint = uint64_t;
 using addr_raw_t = uint64_t;
-using addr_t = std::bitset<32>;
+using addr_t = std::bitset<ADDR_WIDTH>;
 
 inline addr_raw_t Cvt2AddrRaw(addr_t addr) { return addr.to_ullong(); }
 

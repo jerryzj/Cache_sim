@@ -19,8 +19,7 @@ class BaseCache {
     CacheProperty GetProperty() { return property; }
 
   protected:
-    /*  [30]: valid [29]: dirty bit [28]~[0]: data
-        [31]: enable*/
+    /*  [47]: valid [46]: dirty bit [45]~[0]: data */
     addr_t _cache[MAX_LINE];
 
     // Cache properties
