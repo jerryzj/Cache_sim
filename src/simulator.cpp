@@ -59,28 +59,33 @@ bool Simulator::_CacheHandler(const inst_t &inst) {
     return true;
 }
 
+bool Simulator::_Access(const addr_t &addr) {
+    bool is_hit(false);
+    if (_multi_level) {
+        for (auto _cache_iter = _cache_hierarchy_list.begin();
+             _cache_iter != _cache_hierarchy_list.end() && !is_hit;
+             ++_cache_iter) {
+            is_hit = _cache_iter->Get(addr);
+            if (!is_hit) {
+                _cache_iter->Set(addr);
+            }
+        }
+    } else {
+        is_hit = _cache_hierarchy_list[0].Get(addr);
+        if (!is_hit) {
+            _cache_hierarchy_list[0].Set(addr);
+        }
+    }
+
+    return is_hit;
+}
+
 void Simulator::_Load(const addr_t &addr) {
     ++_counter.access;
     ++_counter.load;
 
-    if (_multi_level) {
-        bool _is_hit(false);
-        for (auto _cache = _cache_hierarchy_list.begin();
-             _cache != _cache_hierarchy_list.end() && !_is_hit; ++_cache) {
-            if (_cache->Get(addr)) {
-                _is_hit = true;
-                ++_counter.load_hit;
-            } else {
-                _is_hit = false;
-                _cache->Set(addr);
-            }
-        }
-    } else {
-        if (_cache_hierarchy_list[0].Get(addr)) {
-            ++_counter.load_hit;
-        } else {
-            _cache_hierarchy_list[0].Set(addr);
-        }
+    if (_Access(addr)) {
+        ++_counter.load_hit;
     }
 }
 
@@ -88,24 +93,8 @@ void Simulator::_Store(const addr_t &addr) {
     ++_counter.access;
     ++_counter.store;
 
-    if (_multi_level) {
-        bool _is_hit(false);
-        for (auto _cache = _cache_hierarchy_list.begin();
-             _cache != _cache_hierarchy_list.end() && !_is_hit; ++_cache) {
-            if (_cache->Get(addr)) {
-                _is_hit = true;
-                ++_counter.store_hit;
-            } else {
-                _is_hit = false;
-                _cache->Set(addr);
-            }
-        }
-    } else {
-        if (_cache_hierarchy_list[0].Get(addr)) {
-            ++_counter.store_hit;
-        } else {
-            _cache_hierarchy_list[0].Set(addr);
-        }
+    if (_Access(addr)) {
+        ++_counter.store_hit;
     }
 }
 

@@ -39,6 +39,7 @@ class Simulator {
   private:
     void _SetupCache(const std::vector<CacheProperty> &_cfg_list);
     bool _CacheHandler(const inst_t &inst); // Main Instruction processing
+    bool _Access(const addr_t &addr);
     void _Load(const addr_t &addr);
     void _Store(const addr_t &addr);
     void _CalHitRate(); // Caculate hit rate
