@@ -49,7 +49,7 @@ class Simulator {
     std::unique_ptr<InstructionLoader> inst_loader;
     std::vector<MainCache> _cache_hierarchy_list;
 
-    const bool _multi_level;
+    [[maybe_unused]] const bool _multi_level;
     const std::string &trace_file;
     COUNTER _counter;
 };
