@@ -11,7 +11,7 @@ MainCache::MainCache(const CacheProperty &setting) : BaseCache(setting) {
         property._bit_tag = 32 - property._bit_offset;
         break;
     case direct_mapped:
-        property._bit_index = log2(property._num_block - 1);
+        property._bit_index = log2l(property._num_block);
         property._bit_set = 0;
         property._bit_tag = 32 - property._bit_offset - property._bit_index;
         break;
@@ -19,7 +19,8 @@ MainCache::MainCache(const CacheProperty &setting) : BaseCache(setting) {
         property._bit_index = 0;
         property._num_way = setting._num_way;
         property._num_set = property._num_block / property._num_way;
-        property._bit_set = log2(property._num_set - 1);
+        property._bit_set = log2l(property._num_set);
+        property._bit_tag = 32 - property._bit_offset - property._bit_set;
         break;
     }
 }
@@ -237,16 +238,16 @@ ulint MainCache::_GetIndexByLRU([[maybe_unused]] const addr_t &addr) {
 
         bool flag(false);
         ulint j;
-        for (ulint idx = _set_num * property._num_way;
-             idx < (_set_num + 1) * property._num_way && !flag; idx++) {
-            for (j = 0; j < _LRU_priority.size() && !flag; j++) {
-                if (_LRU_priority[j] == idx)
+        for (j = 0; j < _LRU_priority.size() && !flag; j++) {
+            for (ulint idx = _set_num * property._num_way;
+                 idx < (_set_num + 1) * property._num_way && !flag; idx++) {
+                if (_LRU_priority[j] == idx) {
                     flag = true;
+                    res = _LRU_priority[j];
+                    _LRU_priority.erase(_LRU_priority.begin() + j);
+                }
             }
         }
-
-        res = _LRU_priority[j];
-        _LRU_priority.erase(_LRU_priority.begin() + j);
 
         break;
     }
