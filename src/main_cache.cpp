@@ -134,23 +134,23 @@ ulint MainCache::_GetIndexByRandom(const addr_t &addr) {
     std::uniform_int_distribution<int> unif(0, INT32_MAX);
     ulint res(0);
     switch (property.associativity) {
+    case direct_mapped:
+        // nothing to do
+        break;
 
-    case full_associative: {
+    case full_associative:
         res = static_cast<ulint>(unif(generator) /
                                  (INT32_MAX / property._num_block + 1));
         break;
-    }
-    case set_associative: {
+
+    case set_associative:
         ulint temp = static_cast<ulint>(unif(generator) /
                                         (INT32_MAX / property._num_way + 1));
         ulint _set_num = _GetSetNumber(addr);
         res = _set_num * property._num_way + temp;
         break;
     }
-    default: {
-        break;
-    }
-    }
+
     return res;
 }
 
