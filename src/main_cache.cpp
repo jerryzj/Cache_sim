@@ -116,7 +116,12 @@ void MainCache::_HitHandle([[maybe_unused]] const addr_t &addr) {
     };
 
     switch (property.associativity) {
-    case full_associative: {
+
+    case direct_mapped:
+        // Nothing to do
+        break;
+
+    case full_associative:
         for (ulint idx = 0; idx < property._num_block; idx++) {
             if (_cache[idx][30] &&
                 check_ident(idx, property._bit_tag, addr, _cache)) {
@@ -132,9 +137,8 @@ void MainCache::_HitHandle([[maybe_unused]] const addr_t &addr) {
         }
 
         break;
-    }
 
-    case set_associative: {
+    case set_associative:
         ulint _set_num = _GetSetNumber(addr);
 
         for (ulint idx = _set_num * property._num_way;
@@ -153,12 +157,6 @@ void MainCache::_HitHandle([[maybe_unused]] const addr_t &addr) {
         }
 
         break;
-    }
-
-    default: {
-
-        break;
-    }
     }
 }
 
