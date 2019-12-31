@@ -1,0 +1,11 @@
+{
+    "multi-level": false,
+    "content": [
+        {
+            "cache-size": 8,
+            "block-size": 64,
+            "associativity": "full-associative",
+            "replacement-policy": "lru"
+        }
+    ]
+}

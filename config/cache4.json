@@ -1,0 +1,19 @@
+{
+    "multi-level": true,
+    "content": [
+        {
+            "cache-size": 32,
+            "block-size": 64,
+            "associativity": "set-associative",
+            "number-of-way": 4,
+            "replacement-policy": "random"
+        },
+        {
+            "cache-size": 256,
+            "block-size": 64,
+            "associativity": "set-associative",
+            "number-of-way": 8,
+            "replacement-policy": "random"
+        }
+    ]
+}
