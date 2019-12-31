@@ -116,7 +116,12 @@ void MainCache::_HitHandle([[maybe_unused]] const addr_t &addr) {
     };
 
     switch (property.associativity) {
-    case full_associative: {
+
+    case direct_mapped:
+        // Nothing to do
+        break;
+
+    case full_associative:
         for (ulint idx = 0; idx < property._num_block; idx++) {
             if (_cache[idx][30] &&
                 check_ident(idx, property._bit_tag, addr, _cache)) {
@@ -132,9 +137,8 @@ void MainCache::_HitHandle([[maybe_unused]] const addr_t &addr) {
         }
 
         break;
-    }
 
-    case set_associative: {
+    case set_associative:
         ulint _set_num = _GetSetNumber(addr);
 
         for (ulint idx = _set_num * property._num_way;
@@ -153,12 +157,6 @@ void MainCache::_HitHandle([[maybe_unused]] const addr_t &addr) {
         }
 
         break;
-    }
-
-    default: {
-
-        break;
-    }
     }
 }
 
@@ -189,23 +187,23 @@ ulint MainCache::_GetIndexByRandom(const addr_t &addr) {
     std::uniform_int_distribution<int> unif(0, INT32_MAX);
     ulint res(0);
     switch (property.associativity) {
+    case direct_mapped:
+        // nothing to do
+        break;
 
-    case full_associative: {
+    case full_associative:
         res = static_cast<ulint>(unif(generator) /
                                  (INT32_MAX / property._num_block + 1));
         break;
-    }
-    case set_associative: {
+
+    case set_associative:
         ulint temp = static_cast<ulint>(unif(generator) /
                                         (INT32_MAX / property._num_way + 1));
         ulint _set_num = _GetSetNumber(addr);
         res = _set_num * property._num_way + temp;
         break;
     }
-    default: {
-        break;
-    }
-    }
+
     return res;
 }
 
@@ -214,7 +212,10 @@ ulint MainCache::_GetIndexByLRU([[maybe_unused]] const addr_t &addr) {
     // # TODO
 
     switch (property.associativity) {
-    case full_associative: {
+    case direct_mapped:
+        break;
+
+    case full_associative:
         for (ulint idx = 0; idx < property._num_block; idx++) {
             if (!_cache[idx][30]) {
                 return idx;
@@ -225,9 +226,8 @@ ulint MainCache::_GetIndexByLRU([[maybe_unused]] const addr_t &addr) {
         _LRU_priority.erase(_LRU_priority.begin());
 
         break;
-    }
 
-    case set_associative: {
+    case set_associative:
         ulint _set_num = _GetSetNumber(addr);
         for (ulint idx = _set_num * property._num_way;
              idx < (_set_num + 1) * property._num_way; idx++) {
@@ -252,10 +252,6 @@ ulint MainCache::_GetIndexByLRU([[maybe_unused]] const addr_t &addr) {
         break;
     }
 
-    default: {
-        break;
-    }
-    }
     return res;
 }
 
